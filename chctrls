@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+
+# chctrls (CHange ConTRoLS)
+# Automatic game controls updater
+
+cat game.ml | perl -ne 'print "$1\n" if /.*CHCTRL ([A-Z]+).*/' > .ctrllist
+
+while read -u 4 line; do
+    read -p "Enter key for control $line > " -rsn1 key
+    echo $key
+    sed -E -i 's/(let .*=.*)'\''.*'\''(.*'"$line"'.*)/\1'\'"$key"\''\2/' game.ml
+    sleep 0.5
+done 4<.ctrllist
+
+rm .ctrllist

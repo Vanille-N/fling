@@ -2,13 +2,13 @@ module G = Graphics
 module D = Draw
 
 
-(* controls *)
-let k_mv_up = '.'
-let k_mv_dn = 'e'
-let k_mv_lt = 'o'
-let k_mv_rt = 'u'
-let k_launch = 'i'
-
+(* Controls *)
+(* Do not edit the markers, as they are tags for chctrls *)
+let k_mv_up = '.' (* CHCTRL UP *)
+let k_mv_dn = 'e' (* CHCTRL DOWN *)
+let k_mv_lt = 'o' (* CHCTRL LEFT *)
+let k_mv_rt = 'u' (* CHCTRL RIGHT *)
+let k_launch = 'i' (* CHCTRL LAUNCH *)
 
 (* max width of the grid printed *)
 let max_x = 15
