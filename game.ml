@@ -84,21 +84,21 @@ let create_game () =
    If the player choose on the menu which function should be called *)
 let rec menu = [("solve", solve);("play", play);("exit", leave)]
 
-(* play allows the player to create a new game, and then try to solve it *)
+(* [play ()] allows the player to create a new game, and then try to solve it *)
 and play () =
   game := create_game ();
   loop !game
 
-(* solve allows the player to create a new game and then see if the game can be solved *)
+(* [solve ()] allows the player to create a new game and then see if the game can be solved *)
 and solve () =
   game := create_game ();
   solver !game
 
-(* loop game loops on the game while their is still moves possible for the player *)
+(* [loop game] loops on the game while there are still moves possible for the player *)
 and loop game =
   failwith "TODO loop"
 
-(* solver game solve the game if it is possible *)
+(* [solver game] solves the game if it is possible *)
 and solver game  =
   D.draw_game max_x max_y game;
   let moves = Solver.solve game in
@@ -116,7 +116,7 @@ and solver game  =
 (* replay the previous game *)
 and replay () =
   loop !game
-(* resolve the preivous game *)
+(* resolve the previous game *)
 and resolve () =
   solver !game
 (* leave the application *)
