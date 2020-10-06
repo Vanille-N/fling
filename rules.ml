@@ -25,7 +25,9 @@ let make_ball id p =
     { id=id; pos=p }
 
 let new_game bs =
+    (* use an array for better access *)
     let balls = Array.of_list bs in
+    (* start with all balls active *)
     let active = Sint.of_list (List.init (Array.length balls) (fun x -> x)) in
     let g = {
         balls=balls;
@@ -43,10 +45,14 @@ let apply_move g move = failwith "TODO apply_move"
 
 let moves g = failwith "TODO moves"
 
-let get_balls g = failwith "TODO get_balls"
+let get_balls g =
+    g.active
+    |> Sint.elements
+    |> List.map (fun i -> g.balls.(i))
 
 let is_ball g p = failwith "TODO is_ball"
 
 let ball_of_position game p = failwith "TODO ball_of_position"
 
-let position_of_ball b = failwith "position_of_ball"
+let position_of_ball b =
+    b.pos
