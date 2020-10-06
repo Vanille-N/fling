@@ -104,7 +104,15 @@ and solve () =
 
 (* [loop game] loops on the game while there are still moves possible for the player *)
 and loop game =
-  failwith "TODO loop"
+  let game = ref game in
+  let allowed = ref (Rules.moves !game) in
+  while !allowed <> [] do
+    let user = get_next_move !game in
+    if List.mem user !allowed then begin
+        game := Rules.apply_move !game user;
+        allowed := Rules.moves !game;
+    end
+  done
 
 (* [solver game] solves the game if it is possible *)
 and solver game  =
