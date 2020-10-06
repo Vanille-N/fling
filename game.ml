@@ -1,6 +1,15 @@
 module G = Graphics
 module D = Draw
 
+
+(* controls *)
+let k_mv_up = '.'
+let k_mv_dn = 'e'
+let k_mv_lt = 'o'
+let k_mv_rt = 'u'
+let k_launch = 'i'
+
+
 (* max width of the grid printed *)
 let max_x = 15
 
@@ -35,10 +44,10 @@ let rec get_ball_direction () =
   let dir_of_char c =
     Rules.(
       match c with
-      | 'z' -> Some Up
-      | 's' -> Some Down
-      | 'd' -> Some Right
-      | 'q' -> Some Left
+      | c when c=k_mv_up -> Some Up
+      | c when c=k_mv_dn -> Some Down
+      | c when c=k_mv_rt -> Some Right
+      | c when c=k_mv_lt -> Some Left
       | _ -> None
     )
   in
@@ -62,7 +71,7 @@ let create_game () =
   let ball_count = ref 0 in
   let rec add_balls l =
     let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
-    if status.G.keypressed = true &&  Char.chr (Char.code status.G.key) = 'e' then
+    if status.G.keypressed = true &&  Char.chr (Char.code status.G.key) = k_launch then
       begin Draw.ready true; l end
     else
       let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
@@ -103,7 +112,7 @@ and solver game  =
   D.draw_game max_x max_y game;
   let moves = Solver.solve game in
   match moves with
-  | None ->   D.draw_string "No solution!"; get_key_pressed (fun c -> main menu)
+  | None -> D.draw_string "No solution!"; get_key_pressed (fun c -> main menu)
   | Some moves ->
     let g = List.fold_left (fun g m -> D.draw_game max_x max_y g ;
                              D.draw_string "Solved!";
