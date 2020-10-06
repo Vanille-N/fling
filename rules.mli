@@ -7,8 +7,8 @@ type move
 
 type game
 
-(** [make_ball pos] returns a new ball at position [pos] *)
-val make_ball : Position.t -> ball
+(** [make_ball id pos] returns a new ball idendified as [id] at position [pos] *)
+val make_ball : int -> Position.t -> ball
 
 (** [new_game ball_list] returns a new game form a list of balls [ball_list] *)
 val new_game : ball list -> game
@@ -32,7 +32,7 @@ val get_balls : game -> ball list
 (** [is_ball pos] returns true if and only if their is a ball on the position [pos] *)
 val is_ball : game -> Position.t -> bool
 
-(** [ball_of_position game pos] returns the ball that is on the position [pos]. Fail if their is none *)
+(** [ball_of_position game pos] returns the ball that is on the position [pos]. Fail if there is none *)
 val ball_of_position : game -> Position.t -> ball
 
 (** [position_of_ball ball] returns the position of the ball [ball] *)

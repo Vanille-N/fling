@@ -59,6 +59,7 @@ let get_next_move game =
 let create_game () =
   D.ready false;
   D.draw_game max_x max_y (Rules.new_game []);
+  let ball_count = ref 0 in
   let rec add_balls l =
     let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
     if status.G.keypressed = true &&  Char.chr (Char.code status.G.key) = 'e' then
@@ -69,7 +70,8 @@ let create_game () =
       let (x',y') = Position.proj_x p, Position.proj_y p in
       (* balls can not be outside the grid *)
       if 0 <= x' && x' < max_x && 0 <= y' && y' < max_y then
-        let ball = Rules.make_ball p in
+        let ball = Rules.make_ball !ball_count p in
+        incr ball_count;
         D.draw_ball ball;
         add_balls (ball::l)
       else

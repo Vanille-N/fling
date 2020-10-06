@@ -1,18 +1,43 @@
 type direction = Up | Right | Down | Left
 
-type ball
+module Sint = Set.Make(
+  struct
+    let compare = Stdlib.compare
+    type t = int
+  end )
 
-type move
+type ball = {
+    id: int;
+    mutable pos: Position.t;
+}
 
-type game
+type move = {
+    ball: ball;
+    dir: direction;
+}
 
-let make_ball p = failwith "TODO make_ball"
+type game = {
+    balls: ball array;
+    active: Sint.t;
+}
 
-let new_game ps = failwith "TODO new_game"
+let make_ball id p =
+    { id=id; pos=p }
 
-let eq_ball b b' = failwith "TODO eq_ball"
+let new_game bs =
+    let balls = Array.of_list bs in
+    let active = Sint.of_list (List.init (Array.length balls) (fun x -> x)) in
+    let g = {
+        balls=balls;
+        active=active;
+    } in
+    g
 
-let make_move p d = failwith "TODO make_move"
+let eq_ball b b' =
+    false
+
+let make_move b d =
+    { ball=b; dir=d; }
 
 let apply_move g move = failwith "TODO apply_move"
 
