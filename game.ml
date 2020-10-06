@@ -4,11 +4,11 @@ module D = Draw
 
 (* Controls *)
 (* Do not edit the markers, as they are tags for chctrls *)
-let k_mv_up = '.' (* CHCTRL UP *)
-let k_mv_dn = 'e' (* CHCTRL DOWN *)
-let k_mv_lt = 'o' (* CHCTRL LEFT *)
-let k_mv_rt = 'u' (* CHCTRL RIGHT *)
-let k_launch = 'i' (* CHCTRL LAUNCH *)
+let k_mv_up = '.' (* KEY MOVE UP *)
+let k_mv_dn = 'e' (* KEY MOVE DOWN *)
+let k_mv_lt = 'o' (* KEY MOVE LEFT *)
+let k_mv_rt = 'u' (* KEY MOVE RIGHT *)
+let k_launch = 'i' (* KEY LAUNCH GAME *)
 
 (* max width of the grid printed *)
 let max_x = 15

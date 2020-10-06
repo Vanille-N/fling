@@ -3,7 +3,7 @@
 # chctrls (CHange ConTRoLS)
 # Automatic game controls updater
 
-cat game.ml | perl -ne 'print "$1\n" if /.*CHCTRL ([A-Z]+).*/' > .ctrllist
+cat game.ml | perl -ne 'print "$1\n" if /.*KEY ([A-Z ]+).* \*\)/' > .ctrllist
 
 while read -u 4 line; do
     read -p "Enter key for control $line > " -rsn1 key
