@@ -70,7 +70,7 @@ let create_game () =
   let ball_count = ref 0 in
   let rec add_balls l =
     let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
-    if status.G.keypressed = true &&  Char.chr (Char.code status.G.key) = k_launch then
+    if status.G.keypressed = true && Char.chr (Char.code status.G.key) = k_launch then
       begin Draw.ready true; l end
     else
       let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
@@ -111,8 +111,11 @@ and loop game =
     if List.mem user !allowed then begin
         game := Rules.apply_move !game user;
         allowed := Rules.moves !game;
+        D.draw_game max_x max_y !game;
     end
-  done
+  done;
+  get_key_pressed (fun c -> ());
+  main menu
 
 (* [solver game] solves the game if it is possible *)
 and solver game  =

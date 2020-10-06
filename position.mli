@@ -10,4 +10,4 @@ val eq : t -> t -> bool
 
 val move : t -> t -> t
 
-val string_of_position : t -> string
+val to_string : t -> string
