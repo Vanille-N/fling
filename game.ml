@@ -11,10 +11,10 @@ let k_mv_rt = 'u' (* KEY MOVE RIGHT *)
 let k_launch = 'i' (* KEY LAUNCH GAME *)
 
 (* max width of the grid printed *)
-let max_x = 15
+let max_x = Rules.grid_width
 
 (* max height of the grid printed *)
-let max_y = 15
+let max_y = Rules.grid_height
 
 (* game is a reference to the initial game. *)
 let game = ref (Rules.new_game [])
@@ -53,7 +53,6 @@ let rec get_ball_direction () =
   in
   get_key_pressed (fun c -> match dir_of_char c with
       | Some (x) -> x
-
       | None -> get_ball_direction () (* wrong key pressed by the player *)
     )
 
