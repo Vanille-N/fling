@@ -6,3 +6,4 @@
 _build
 *.tar.gz
 !chctrls
+.ctrllist
