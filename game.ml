@@ -9,6 +9,7 @@ let k_mv_dn = 'e' (* KEY MOVE DOWN *)
 let k_mv_lt = 'o' (* KEY MOVE LEFT *)
 let k_mv_rt = 'u' (* KEY MOVE RIGHT *)
 let k_launch = 'i' (* KEY LAUNCH GAME *)
+let k_mv_abrt = 'q' (* KEY ABORT MOVE *)
 
 (* max width of the grid printed *)
 let max_x = Rules.grid_width
@@ -48,6 +49,7 @@ let rec get_ball_direction () =
       | c when c=k_mv_dn -> Some Down
       | c when c=k_mv_rt -> Some Right
       | c when c=k_mv_lt -> Some Left
+      | c when c=k_mv_abrt -> Some Stay
       | _ -> None
     )
   in
@@ -90,32 +92,36 @@ let create_game () =
 
 (* A menu is a pair of string * f where f is a function of type unit -> unit.
    If the player choose on the menu which function should be called *)
-let rec menu = [("solve", solve);("play", play);("exit", leave)]
-
+let rec menu = [("solve new", solve);("play new", play);("exit", leave)]
+and menu_replay = [("solve new", solve);("resolve", resolve);
+                   ("play new", play); ("replay", replay); ("exit", leave)]
 (* [play ()] allows the player to create a new game, and then try to solve it *)
 and play () =
   game := create_game ();
-  loop !game
+  loop (Rules.deep_copy !game)
 
 (* [solve ()] allows the player to create a new game and then see if the game can be solved *)
 and solve () =
   game := create_game ();
-  solver !game
+  solver (Rules.deep_copy !game)
 
 (* [loop game] loops on the game while there are still moves possible for the player *)
 and loop game =
   let game = ref game in
   let allowed = ref (Rules.moves !game) in
   while !allowed <> [] do
+    D.draw_game max_x max_y !game;
     let user = get_next_move !game in
     if List.mem user !allowed then begin
+        (* { b; Stay } is never allowed regardless of b,
+         * ensuring that Stay will never be converted into a Position.t *)
         game := Rules.apply_move !game user;
         allowed := Rules.moves !game;
-        D.draw_game max_x max_y !game;
     end
   done;
+  D.draw_game max_x max_y !game;
   get_key_pressed (fun c -> ());
-  main menu
+  main menu_replay
 
 (* [solver game] solves the game if it is possible *)
 and solver game  =
@@ -134,10 +140,10 @@ and solver game  =
 
 (* replay the previous game *)
 and replay () =
-  loop !game
+  loop (Rules.deep_copy !game)
 (* resolve the previous game *)
 and resolve () =
-  solver !game
+  solver (Rules.deep_copy !game)
 (* leave the application *)
 and leave () =
   D.close_window()
