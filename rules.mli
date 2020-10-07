@@ -1,4 +1,4 @@
-type direction = Up | Right | Down | Left
+type direction = Up | Right | Down | Left | Stay
 
 
 type ball
@@ -41,3 +41,6 @@ val ball_of_position : game -> Position.t -> ball
 
 (** [position_of_ball ball] returns the position of the ball [ball] *)
 val position_of_ball : ball -> Position.t
+
+(** [game] is not immutable, we need a way to deep copy it *)
+val deep_copy : game -> game
