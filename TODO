@@ -1,3 +1,9 @@
-- Add a way to go back to the initial state, or to go back of one move
-- clean the code
-- factorize apply move
+(DONE) - allow unselecting a ball
+(DONE) - enable exit game
+(DONE) - add replay
+(DONE) - add undo
+(GOOD) - factorize apply move
+(DONE) - ensure only one ball per position
+>>>>>> - clean the code
+>>>>>> - implement solver
+>>>>>> - automatic game generation
