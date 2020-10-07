@@ -57,8 +57,7 @@ let hist_pop g =
 let grid_width = 15
 let grid_height = 15
 
-let make_ball id p =
-    { id=id; pos=p }
+let make_ball id p = { id=id; pos=p }
 
 let ball_of_position game p =
     Hashtbl.find game.grid p
@@ -77,15 +76,11 @@ let new_game bs =
             ) bs;
     { balls=balls; grid=grid; hist=[]; }
 
-let eq_ball b b' =
-    b.id = b'.id
+let eq_ball b b' = b.id = b'.id
 
-let make_move b d =
-    { ball=b; dir=d; }
+let make_move b d = { ball=b; dir=d; }
 
-let is_ball g p =
-    (* we just have to see if p exists in g.grid *)
-    Hashtbl.mem g.grid p
+let is_ball g p = Hashtbl.mem g.grid p
 
 let is_inside p =
     let x = Position.proj_x p
@@ -97,6 +92,7 @@ let is_inside p =
  * It stops when a ball goes off the edge.
  *)
 let rec apply_move g move =
+    Printf.printf "Apply move to ball %d\n" move.ball.id;
     let p' = pos_of_dir move.dir in
     let p = ref move.ball.pos in
     let pnext = ref (Position.move !p p') in
@@ -164,6 +160,7 @@ let moves g =
     (* equivalent to Hashtbl.keys, yields all balls still in game *)
     |> fun h -> Hashtbl.fold (fun k v acc -> { id=k; pos=v; } :: acc) h []
     |> List.map (moves_ball g)
+    (* concatenate all. Notice x @ acc and not acc @ x for linear performance *)
     |> List.fold_left (fun acc x -> x @ acc) []
 
 let get_balls g =
@@ -172,11 +169,8 @@ let get_balls g =
     |> fun h -> Hashtbl.fold (fun k v acc -> (k, v) :: acc) h []
     |> List.map (fun (i, p) -> make_ball i p)
 
-let position_of_ball b =
-    b.pos
+let position_of_ball b = b.pos
 
-let direction_of_move mv =
-    mv.dir
+let direction_of_move mv = mv.dir
 
-let has_undo g =
-    g.hist != []
+let has_undo g = g.hist != []

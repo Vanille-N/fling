@@ -1,10 +1,15 @@
-(DONE) allow unselecting a ball
-(DONE) enable exit game
-(DONE) add replay
-(DONE) add undo
-(DONE)  ensure only one ball per position
-(GOOD) factorize apply move
-(GOOD) clean the code
-(TODO) keypress helper
-(TODO) implement solver
-(TODO) automatic game generation
+(DONE)
+allow unselecting a ball
+enable exit game
+add replay
+add undo
+ensure only one ball per position
+
+(GOOD)
+factorize apply move
+clean the code
+keypress helper
+
+(TODO)
+implement solver
+automatic game generation
