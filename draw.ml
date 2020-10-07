@@ -1,8 +1,8 @@
 module G = Graphics
 
-let width = 1024
+let width = 800
 
-let height = 1024
+let height = 800
 
 let line_height = 25
 
@@ -99,7 +99,7 @@ let draw_balls balls =
   List.iter draw_ball balls
 
 let draw_string s =
-  G.moveto (width/2) (height-padding_up);
+  G.moveto (width/10) (height-padding_up);
   G.set_color G.red;
   G.draw_string s
 
