@@ -17,6 +17,16 @@ let k_launch = 'i' (* KEY LAUNCH GAME *)
 let k_mv_abrt = 'q' (* KEY ABORT MOVE *)
 let k_quit_game = 'i' (* KEY QUIT GAME *)
 let k_mv_undo = 'a' (* KEY MOVE UNDO *)
+let k_fail = 'x' (* KEY FAIL *)
+
+let message_init_game = Printf.sprintf "Create all balls then press %c to start" k_launch
+let message_select_ball = Printf.sprintf "Select a ball or exit with %c or undo last move with %c" k_quit_game k_mv_undo
+let message_select_no_undo = Printf.sprintf "Select a ball or exit with %c" k_quit_game
+let message_select_dir_before = "Select a direction ("
+let message_select_dir_after = Printf.sprintf ") or cancel with %c" k_mv_abrt
+let message_no_moves = Printf.sprintf "This ball has no possible moves. Cancel with %c" k_mv_abrt
+let message_no_solution = Printf.sprintf "There are no possible actions left. You can undo with %c or exit with %c" k_mv_undo k_quit_game
+let message_win = Printf.sprintf "There is only one ball left, YOU WIN ! Undo with %c or exit with %c" k_mv_undo k_quit_game
 
 (* max width of the grid printed *)
 let max_x = Rules.grid_width
@@ -34,11 +44,13 @@ let rec get_ball game =
     if status.G.keypressed = true then begin
         if Char.chr (Char.code status.G.key) = k_quit_game then Abort
         else if Char.chr (Char.code status.G.key) = k_mv_undo then Undo
+        else if Char.chr (Char.code status.G.key) = k_fail then failwith "Program terminated on keypress"
         else get_ball game (* not a valid key, keep waiting *)
     end else begin
         (* check if a ball was selected *)
         let (x,y) = (status.G.mouse_x,status.G.mouse_y) in
         let p = D.position_of_coord x y in
+        D.draw_game max_x max_y game;
         if Rules.is_ball game p then
             begin
                 let ball = Rules.ball_of_position game p in
@@ -75,7 +87,24 @@ let rec get_ball_direction () =
 (* get the next move of the player *)
 let get_next_move game =
     match get_ball game with
-        | Ball p -> let d = get_ball_direction () in Move (Rules.make_move p d)
+        | Ball p -> (
+            let allowed = Rules.moves_ball game p in
+                if allowed = [] then D.draw_string message_no_moves
+                else (
+                    let dirs = allowed
+                        |> List.map Rules.direction_of_move
+                        |> List.map Rules.(function
+                            | Up -> Printf.sprintf "[^] = '%c'" k_mv_up
+                            | Down -> Printf.sprintf "[v] = '%c'" k_mv_dn
+                            | Left -> Printf.sprintf "[<] = '%c'" k_mv_lt
+                            | Right -> Printf.sprintf "[>] = '%c'" k_mv_rt
+                            | Stay -> failwith "Unreachable @get_next_move::Ball" (* Stay is never valid *)
+                        )
+                        |> String.concat " ; "
+                    in D.draw_string (message_select_dir_before ^ dirs ^ message_select_dir_after)
+                    );
+            let d = get_ball_direction () in Move (Rules.make_move p d)
+            )
         | Abort -> Abort
         | Move _ -> failwith "Unreachable @get_next_move::Move" (* only get_next_move can create Move *)
         | Undo -> Undo
@@ -85,6 +114,7 @@ let get_next_move game =
 let create_game () =
     D.ready false;
     D.draw_game max_x max_y (Rules.new_game []);
+    D.draw_string message_init_game;
     let ball_count = ref 0 in
     let rec add_balls l =
         let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
@@ -131,6 +161,13 @@ and loop game =
     let stay = ref true in (* should we keep looping ? *)
     while !stay do
         D.draw_game max_x max_y !game;
+        let balls = Rules.get_balls !game in
+        D.draw_string (
+            if List.length balls <= 1 then message_win
+            else if (Rules.moves !game) = [] then message_no_solution
+            else if Rules.has_undo !game then message_select_ball
+            else message_select_no_undo
+        );
         let user = get_next_move !game in
         match user with
             | Move user ->
