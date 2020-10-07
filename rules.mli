@@ -33,6 +33,9 @@ val undo_move : game -> game
 (** [moves game] returns all the valid moves possible for [game] *)
 val moves : game -> move list
 
+(** [moves_ball game ball] returns all the valid moves for [game] that involve [ball] *)
+val moves_ball : game -> ball -> move list
+
 (** [get_balls game] returns the current list of ball on the [game] *)
 val get_balls : game -> ball list
 
@@ -47,3 +50,9 @@ val position_of_ball : ball -> Position.t
 
 (** [game] is not immutable, we need a way to deep copy it *)
 val deep_copy : game -> game
+
+(** useful to display the allowed directions *)
+val direction_of_move : move -> direction
+
+(** is there a previous move ? *)
+val has_undo : game -> bool

@@ -142,29 +142,29 @@ let undo_move g =
         ) disps;
     g
 
+let moves_ball g b =
+    (* for each possible move: *)
+    [Up; Down; Right; Left]
+    |> List.filter_map (fun m ->
+        let pos = Hashtbl.find g.balls b.id in
+        let p' = pos_of_dir m in
+        let p = ref (Position.move pos p') in
+        (* find another ball or the edge *)
+        while (is_inside !p) && not (is_ball g !p) do
+            p := Position.move !p p';
+        done;
+        (* it was a ball, the move is valid *)
+        if is_ball g !p then
+            Some(make_move (make_ball b.id pos) m)
+        else None
+    )
+
 let moves g =
-    let mv = ref [] in
-    (* for one ball first, then we'll iterate over all balls *)
-    let find_moves_ball id =
-        (* for each possible move: *)
-        List.iter (fun m ->
-                let pos = Hashtbl.find g.balls id in
-                let p' = pos_of_dir m in
-                let p = ref (Position.move pos p') in
-                (* find another ball or the edge *)
-                while (is_inside !p) && not (is_ball g !p) do
-                    p := Position.move !p p';
-                done;
-                (* it was a ball, the move is valid *)
-                if is_ball g !p then
-                    mv := (make_move (make_ball id pos) m) :: !mv;
-            ) [Up; Down; Right; Left]
-    in
     g.balls
     (* equivalent to Hashtbl.keys, yields all balls still in game *)
-    |> fun h -> Hashtbl.fold (fun k v acc -> k :: acc) h []
-    |> List.iter find_moves_ball;
-    !mv
+    |> fun h -> Hashtbl.fold (fun k v acc -> { id=k; pos=v; } :: acc) h []
+    |> List.map (moves_ball g)
+    |> List.fold_left (fun acc x -> x @ acc) []
 
 let get_balls g =
     g.balls
@@ -174,3 +174,9 @@ let get_balls g =
 
 let position_of_ball b =
     b.pos
+
+let direction_of_move mv =
+    mv.dir
+
+let has_undo g =
+    g.hist != []
