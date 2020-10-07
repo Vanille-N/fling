@@ -27,6 +27,9 @@ val make_move : ball -> direction -> move
 (** [apply_move game move] returns a new game where [move] has been applied to [game] *)
 val apply_move : game -> move -> game
 
+(** [undo_move game] rolls back the last move. Repeatable. *)
+val undo_move : game -> game
+
 (** [moves game] returns all the valid moves possible for [game] *)
 val moves : game -> move list
 

@@ -1,6 +1,11 @@
 module G = Graphics
 module D = Draw
 
+type action =
+    | Move of Rules.move
+    | Ball of Rules.ball
+    | Undo
+    | Abort
 
 (* Controls *)
 (* Do not edit the markers, as they are tags for chctrls *)
@@ -10,6 +15,8 @@ let k_mv_lt = 'o' (* KEY MOVE LEFT *)
 let k_mv_rt = 'u' (* KEY MOVE RIGHT *)
 let k_launch = 'i' (* KEY LAUNCH GAME *)
 let k_mv_abrt = 'q' (* KEY ABORT MOVE *)
+let k_quit_game = 'i' (* KEY QUIT GAME *)
+let k_mv_undo = 'a' (* KEY MOVE UNDO *)
 
 (* max width of the grid printed *)
 let max_x = Rules.grid_width
@@ -22,17 +29,23 @@ let game = ref (Rules.new_game [])
 
 (* return the ball that the player wants to move *)
 let rec get_ball game =
-  let status = G.wait_next_event [G.Button_down] in
-  let (x,y) = (status.G.mouse_x,status.G.mouse_y) in
-  let p = D.position_of_coord x y in
-  if Rules.is_ball game p then
-    begin
-      let ball = Rules.ball_of_position game p in
-      D.draw_ball ~select:true ball; (* to show which ball has been selected *)
-      ball
+    let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
+    if status.G.keypressed = true then begin
+        if Char.chr (Char.code status.G.key) = k_quit_game then Abort
+        else if Char.chr (Char.code status.G.key) = k_mv_undo then Undo
+        else get_ball game
+    end else begin
+        let (x,y) = (status.G.mouse_x,status.G.mouse_y) in
+        let p = D.position_of_coord x y in
+        if Rules.is_ball game p then
+            begin
+                let ball = Rules.ball_of_position game p in
+                D.draw_ball ~select:true ball; (* to show which ball has been selected *)
+                Ball ball
+            end
+        else
+            get_ball game (* the player has selected an empty cell *)
     end
-  else
-    get_ball game (* the player has selected an empty cell *)
 
 (* convert the key pressed into a char and call the continuation k on it *)
 let get_key_pressed k =
@@ -60,9 +73,11 @@ let rec get_ball_direction () =
 
 (* get the next move of the player *)
 let get_next_move game =
-  let p = get_ball game in
-  let d = get_ball_direction () in
-  Rules.make_move p d
+    match get_ball game with
+        | Ball p -> let d = get_ball_direction () in Move (Rules.make_move p d)
+        | Abort -> Abort
+        | Move _ -> failwith "Unreachable @get_next_move::Move"
+        | Undo -> Undo
 
 
 (* create_game allows the player to create its own game by putting balls over the grid *)
@@ -112,12 +127,20 @@ and loop game =
   while !allowed <> [] do
     D.draw_game max_x max_y !game;
     let user = get_next_move !game in
-    if List.mem user !allowed then begin
-        (* { b; Stay } is never allowed regardless of b,
-         * ensuring that Stay will never be converted into a Position.t *)
-        game := Rules.apply_move !game user;
-        allowed := Rules.moves !game;
-    end
+    match user with
+        | Move user ->
+            if List.mem user !allowed then begin
+                (* { b; Stay } is never allowed regardless of b,
+                 * ensuring that Stay will never be converted into a Position.t *)
+                game := Rules.apply_move !game user;
+                allowed := Rules.moves !game;
+            end
+        | Abort -> allowed := []
+        | Ball _ -> failwith "Unreachable @loop::Ball"
+        | Undo -> (
+            game := Rules.undo_move !game;
+            allowed := Rules.moves !game;
+            )
   done;
   D.draw_game max_x max_y !game;
   get_key_pressed (fun c -> ());
