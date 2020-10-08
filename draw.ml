@@ -45,7 +45,6 @@ let init_window () =
 let close_window () =
   G.close_graph()
 
-
 let draw_grid cols rows =
   G.set_color G.black;
   let cell_width = (width - padding_left - padding_right) / cols in
@@ -64,14 +63,12 @@ let draw_grid cols rows =
     G.moveto start_x ((G.current_y ()) + !cell_size)
   done
 
-
-
 let draw_ball ?select:(select=false) ball =
   let p = Rules.position_of_ball ball in
   let size = !cell_size in
   let x = padding_left + Position.proj_x p * size + (size / 2) in
   let y = padding_left + Position.proj_y p * size + (size / 2) in
-  let radius = (size -margin) / 2 in
+  let radius = (size - margin) / 2 in
   begin
     if select then
       G.set_color G.red
@@ -90,10 +87,19 @@ let draw_ball ?select:(select=false) ball =
     begin
       G.draw_circle x y radius;
       G.draw_circle x y (radius+1);
-      G.draw_circle x y (radius+2)
+      (* G.draw_circle x y (radius+2) *)
     end
   else
     G.fill_circle x y radius
+
+(* hide drawing at position p *)
+let undraw_pos p =
+    let size = !cell_size in
+    let x = padding_left + Position.proj_x p * size + (size / 2) in
+    let y = padding_left + Position.proj_y p * size + (size / 2) in
+    let radius = (size - margin) / 2 in
+    G.set_color G.white;
+    G.fill_circle x y (radius+3)
 
 let draw_balls balls =
   List.iter draw_ball balls
@@ -103,10 +109,21 @@ let draw_string s =
   G.set_color G.red;
   G.draw_string s
 
+(* hide text zone *)
+let clear_string () =
+    G.set_color G.white;
+    G.fill_rect 0 (height - padding_up - 5) width (height - padding_up - 10)
+
 let draw_game cols rows game =
-  G.clear_graph ();
-  draw_grid cols rows;
-  draw_balls (Rules.get_balls game)
+    G.clear_graph ();
+    draw_grid cols rows;
+    draw_balls (Rules.get_balls game)
+
+let redraw_game add rem =
+    (* Printf.printf "There are %d to add, %d to remove\n" (List.length add) (List.length rem); *)
+    clear_string ();
+    List.iter undraw_pos rem;
+    draw_balls add
 
 let position_of_coord x y =
   let size = !cell_size in

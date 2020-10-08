@@ -12,6 +12,9 @@ val draw_ball : ?select:bool -> Rules.ball -> unit
     draw the balls of the game [game] on the grid *)
 val draw_game : int -> int -> Rules.game -> unit
 
+(** [redraw_game game] avoids redrawing everything and only removes and redraws the required balls *)
+val redraw_game : Rules.ball list -> Position.t list -> unit
+
 (** [draw_menu func_list] shows a menu that correspond to the possible choices of the player *)
 val draw_menu : (string * 'a) list -> unit
 
