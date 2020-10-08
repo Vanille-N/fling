@@ -30,6 +30,9 @@ val apply_move : game -> move -> game
 (** [undo_move game] rolls back the last move. Repeatable. *)
 val undo_move : game -> game
 
+(** [redo_move game] re-applies the last undone move. Repeatable *)
+val redo_move : game -> game
+
 (** [moves game] returns all the valid moves possible for [game] *)
 val moves : game -> move list
 

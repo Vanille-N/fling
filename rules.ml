@@ -28,13 +28,24 @@ type game = {
     balls: (int, Position.t) Hashtbl.t; (* direct access id -> position *)
     grid: (Position.t, int) Hashtbl.t; (* direct access position -> id *)
     mutable hist: displacement list; (* history of all previous moves *)
+    mutable fwd: displacement list; (* history of undone moves *)
 }
 
-let deep_copy g =
-    { balls=Hashtbl.copy g.balls; grid=Hashtbl.copy g.grid; hist=g.hist }
+let deep_copy g = {
+    balls=Hashtbl.copy g.balls;
+    grid=Hashtbl.copy g.grid;
+    hist=g.hist;
+    fwd=g.fwd;
+}
 
-let hist_push g id old_pos new_pos =
-    g.hist <- { id=id; old_pos=old_pos; new_pos=new_pos; } :: g.hist
+let hist_push g disp =
+    g.hist <- disp :: g.hist
+
+let fwd_push g disp =
+    g.fwd <- disp :: g.fwd
+
+let make_disp id old_pos new_pos =
+    { id=id; old_pos=old_pos; new_pos=new_pos; }
 
 let hist_pop g =
     (* get displacements until either:
@@ -53,6 +64,27 @@ let hist_pop g =
     let (disps, new_hist) = aux false [] g.hist in
     g.hist <- new_hist;
     disps
+
+let fwd_pop g =
+    (* get displacements until either:
+     * - hist is empty (gone back to most advanced state)
+     * - next element has no new_pos
+     * because a sequence of displacements *has* to end with a ball that went off the grid
+     * => no new_pos means last element of previous move
+     *)
+    let rec aux b disps fwd =
+        match fwd with
+            | [] -> (disps, [])
+            | disp::tl ->
+                if b && disp.new_pos = None then (disps, disp::tl)
+                else aux true (disp::disps) tl
+    in
+    let (disps, new_fwd) = aux false [] g.fwd in
+    g.fwd <- new_fwd;
+    disps
+
+let fwd_clear g =
+    g.fwd <- []
 
 let grid_width = 15
 let grid_height = 15
@@ -74,7 +106,7 @@ let new_game bs =
             Hashtbl.add grid b.pos b.id
             end
             ) bs;
-    { balls=balls; grid=grid; hist=[]; }
+    { balls=balls; grid=grid; hist=[]; fwd=[] }
 
 let eq_ball b b' = b.id = b'.id
 
@@ -109,7 +141,7 @@ let rec apply_move g move =
         Hashtbl.remove g.grid move.ball.pos;
         Hashtbl.add g.grid !p id_move;
         (* add move to the history of g *)
-        hist_push g id_move move.ball.pos (Some !p);
+        hist_push g (make_disp id_move move.ball.pos (Some !p));
         (* propagate the move to the ball we hit *)
         apply_move g (make_move (ball_of_position g !pnext) move.dir)
     end else begin
@@ -119,7 +151,8 @@ let rec apply_move g move =
         Hashtbl.remove g.balls id_remove;
         (* add move to the history of g
          * this marks the end of a move (see more in pop_hist) *)
-        hist_push g id_remove move.ball.pos None;
+        hist_push g (make_disp id_remove move.ball.pos None);
+        fwd_clear g;
         g
     end
 
@@ -127,6 +160,7 @@ let undo_move g =
     let disps = hist_pop g in
     (* for each displacement... *)
     List.iter (fun disp ->
+        fwd_push g disp;
         match disp.new_pos with
             | Some p -> (* ball stayed inside the grid, move it *)
                 Hashtbl.remove g.grid p;
@@ -135,6 +169,22 @@ let undo_move g =
             | None -> (* ball went off the edge, put it back in *)
                 Hashtbl.add g.grid disp.old_pos disp.id;
                 Hashtbl.add g.balls disp.id disp.old_pos
+        ) disps;
+    g
+
+let redo_move g =
+    let disps = fwd_pop g in
+    (* for each displacement... *)
+    List.iter (fun disp ->
+        hist_push g disp;
+        match disp.new_pos with
+            | Some p -> (* ball stays inside the grid, move it *)
+                Hashtbl.remove g.grid disp.old_pos;
+                Hashtbl.add g.grid p disp.id;
+                Hashtbl.replace g.balls disp.id p
+            | None -> (* ball goes off the edge *)
+                Hashtbl.remove g.grid disp.old_pos;
+                Hashtbl.remove g.balls disp.id
         ) disps;
     g
 

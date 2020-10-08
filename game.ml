@@ -5,6 +5,7 @@ type action =
     | Move of Rules.move
     | Ball of Rules.ball
     | Undo
+    | Redo
     | Abort
 
 (* Controls *)
@@ -16,7 +17,8 @@ let k_mv_rt = 'u' (* KEY MOVE RIGHT *)
 let k_launch = 'i' (* KEY LAUNCH GAME *)
 let k_mv_abrt = 'q' (* KEY ABORT MOVE *)
 let k_quit_game = 'i' (* KEY QUIT GAME *)
-let k_mv_undo = 'a' (* KEY MOVE UNDO *)
+let k_mv_undo = 'o' (* KEY MOVE UNDO *)
+let k_mv_redo = 'u' (* KEY MOVE REDO *)
 let k_fail = 'x' (* KEY FAIL *)
 
 let message_init_game = Printf.sprintf "Create all balls then press %c to start" k_launch
@@ -44,6 +46,7 @@ let rec get_ball game =
     if status.G.keypressed = true then begin
         if Char.chr (Char.code status.G.key) = k_quit_game then Abort
         else if Char.chr (Char.code status.G.key) = k_mv_undo then Undo
+        else if Char.chr (Char.code status.G.key) = k_mv_redo then Redo
         else if Char.chr (Char.code status.G.key) = k_fail then failwith "Program terminated on keypress"
         else get_ball game (* not a valid key, keep waiting *)
     end else begin
@@ -105,9 +108,8 @@ let get_next_move game =
                     );
             let d = get_ball_direction () in Move (Rules.make_move p d)
             )
-        | Abort -> Abort
         | Move _ -> failwith "Unreachable @get_next_move::Move" (* only get_next_move can create Move *)
-        | Undo -> Undo
+        | other -> other
 
 
 (* create_game allows the player to create its own game by putting balls over the grid *)
@@ -178,6 +180,7 @@ and loop game =
             | Abort -> stay := false
             | Ball _ -> failwith "Unreachable @loop::Ball" (* get_next_move will convert Ball -> Move *)
             | Undo -> game := Rules.undo_move !game
+            | Redo -> game := Rules.redo_move !game
     done;
     D.draw_game max_x max_y !game;
     main menu_replay
