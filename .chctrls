@@ -1,0 +1,63 @@
+#!/usr/bin/bash
+
+# chctrls (CHange ConTRoLS)
+# Automatic game controls updater
+
+# check if stdout is a terminal...
+if test -t 1; then
+
+    # see if it supports colors...
+    ncolors=$(tput colors)
+
+    if test -n "$ncolors" && test $ncolors -ge 8; then
+        bold="$(tput bold)"
+        underline="$(tput smul)"
+        standout="$(tput smso)"
+        normal="$(tput sgr0)"
+        black="$(tput setaf 0)"
+        red="$(tput setaf 1)"
+        green="$(tput setaf 2)"
+        yellow="$(tput setaf 3)"
+        blue="$(tput setaf 4)"
+        magenta="$(tput setaf 5)"
+        cyan="$(tput setaf 6)"
+        white="$(tput setaf 7)"
+    fi
+fi
+
+if [[ "$1" == "check" ]]; then
+    if ls .ctrlset &>/dev/null; then
+        exit 0
+    else
+        echo "    ${yellow}You have not selected your controls yet${normal}"
+        echo -n "    ${yellow}Do you want to setup the game controls ? (${green}y${yellow}/${red}n${yellow}) ${normal}"
+        read -rn1 ans
+        echo ""
+        if [[ $ans == y ]]; then
+            $0
+            echo -n "    ${bold}${green}Your controls are set${normal}"
+        else
+            echo -n "    ${bold}${red}Controls were not changed${normal}"
+        fi
+        touch .ctrlset
+        echo "${yellow}, you will not see this message again${normal}"
+        echo "    ${yellow}If you need to change the controls, run ${bold}${blue}\$ ./.chctrls${normal}"
+        echo ""
+    fi
+else
+    cat game.ml | perl -ne 'print "$1\n" if /.*KEY ([A-Z ]+).* \*\)/' > .ctrllist
+    echo ""
+
+    while read -u 4 line; do
+        sleep 0.5
+        read -p "Enter key for control ${bold}${magenta}${line}${normal} > " -rsn1 key
+        echo $key
+        if [ -n "$key" ]; then
+            sed -E -i 's/(let .*=.*)'\''.*'\''(.*'"$line"'.*)/\1'\'"$key"\''\2/' game.ml
+        fi
+    done 4<.ctrllist
+    echo ""
+fi
+
+rm .ctrllist &>/dev/null
+exit 0
