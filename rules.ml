@@ -224,3 +224,5 @@ let position_of_ball b = b.pos
 let direction_of_move mv = mv.dir
 
 let has_undo g = g.hist != []
+
+let has_redo g = g.fwd != []

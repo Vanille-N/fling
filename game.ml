@@ -22,13 +22,15 @@ let k_mv_redo = 'u' (* KEY MOVE REDO *)
 let k_fail = 'x' (* KEY FAIL *)
 
 let message_init_game = Printf.sprintf "Create all balls then press %c to start" k_launch
-let message_select_ball = Printf.sprintf "Select a ball or exit with %c or undo last move with %c" k_quit_game k_mv_undo
-let message_select_no_undo = Printf.sprintf "Select a ball or exit with %c" k_quit_game
+let message_select_ball = Printf.sprintf "Select a ball or exit with %c" k_quit_game
+let message_undo_move = Printf.sprintf " or undo with %c" k_mv_undo
+let message_redo_move = Printf.sprintf " or redo with %c" k_mv_redo
 let message_select_dir_before = "Select a direction ("
 let message_select_dir_after = Printf.sprintf ") or cancel with %c" k_mv_abrt
 let message_no_moves = Printf.sprintf "This ball has no possible moves. Cancel with %c" k_mv_abrt
-let message_no_solution = Printf.sprintf "There are no possible actions left. You can undo with %c or exit with %c" k_mv_undo k_quit_game
-let message_win = Printf.sprintf "There is only one ball left, YOU WIN ! Undo with %c or exit with %c" k_mv_undo k_quit_game
+let message_lose = "There are no possible actions left. "
+let message_win = "There is only one ball left, YOU WIN ! "
+let message_exit = Printf.sprintf "Exit with %c" k_quit_game
 
 (* max width of the grid printed *)
 let max_x = Rules.grid_width
@@ -164,12 +166,13 @@ and loop game =
     while !stay do
         D.draw_game max_x max_y !game;
         let balls = Rules.get_balls !game in
-        D.draw_string (
-            if List.length balls <= 1 then message_win
-            else if (Rules.moves !game) = [] then message_no_solution
-            else if Rules.has_undo !game then message_select_ball
-            else message_select_no_undo
-        );
+        let message = ref "" in
+            if List.length balls <= 1 then message := message_win ^ message_exit
+            else if (Rules.moves !game) = [] then message := message_lose ^ message_exit
+            else message := message_select_ball;
+            if Rules.has_undo !game then message := !message ^ message_undo_move;
+            if Rules.has_redo !game then message := !message ^ message_redo_move;
+            D.draw_string !message;
         let user = get_next_move !game in
         match user with
             | Move user ->

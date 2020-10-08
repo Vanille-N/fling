@@ -59,3 +59,6 @@ val direction_of_move : move -> direction
 
 (** is there a previous move ? *)
 val has_undo : game -> bool
+
+(** is there a next move ? *)
+val has_redo : game -> bool

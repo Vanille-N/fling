@@ -10,9 +10,9 @@ factorize apply move
 clean the code
 keypress helper
 make checks keyboard
+redo move
 
 (TODO)
 implement solver
 automatic game generation
 load/save file
-redo move
