@@ -16,3 +16,4 @@ redo move
 implement solver
 automatic game generation
 load/save file
+refactor undo_move/redo_move/apply_move + pop_hist/pop_fwd ?

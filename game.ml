@@ -165,14 +165,15 @@ and loop game =
     let stay = ref true in (* should we keep looping ? *)
     while !stay do
         D.draw_game max_x max_y !game;
-        let balls = Rules.get_balls !game in
+        (* display relevant help message *)
         let message = ref "" in
-            if List.length balls <= 1 then message := message_win ^ message_exit
-            else if (Rules.moves !game) = [] then message := message_lose ^ message_exit
+            if Rules.is_win !game then message := message_win ^ message_exit
+            else if Rules.is_blocked !game then message := message_lose ^ message_exit
             else message := message_select_ball;
             if Rules.has_undo !game then message := !message ^ message_undo_move;
             if Rules.has_redo !game then message := !message ^ message_redo_move;
             D.draw_string !message;
+        (* get user action *)
         let user = get_next_move !game in
         match user with
             | Move user ->

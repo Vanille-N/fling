@@ -226,3 +226,7 @@ let direction_of_move mv = mv.dir
 let has_undo g = g.hist != []
 
 let has_redo g = g.fwd != []
+
+let is_win g = (List.compare_length_with (get_balls g) 1) <= 0
+
+let is_blocked g = (moves g) = []

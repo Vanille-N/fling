@@ -62,3 +62,9 @@ val has_undo : game -> bool
 
 (** is there a next move ? *)
 val has_redo : game -> bool
+
+(** did we win ? *)
+val is_win : game -> bool
+
+(** is the game over ? *)
+val is_blocked : game -> bool
