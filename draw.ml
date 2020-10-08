@@ -22,19 +22,20 @@ let colors_generated = ref false
 
 let colors = ref []
 
-let generate_new_color color =
-  let from_rgb c =
+let rgb_of_color c =
     let r = c / (256 * 256) in
     let g = (c / 256) mod 256 in
     let b = c mod 256 in
-    (r,g,b)
-  in
-  let mix i i' = (i + i') / 2 in
-  let red = Random.int 256 in
-  let green = Random.int 256 in
-  let blue = Random.int 256 in
-  let old_red, old_green, old_blue = from_rgb color in
-  G.rgb (mix red old_red) (mix green old_green) (mix blue old_blue)
+    (r, g, b)
+
+let generate_new_color color =
+    let mix i i' = (i + i') / 2 in
+    let darken i = i * 2 / 3 in
+    let red = Random.int 256 in
+    let green = Random.int 256 in
+    let blue = Random.int 256 in
+    let (old_red, old_green, old_blue) = rgb_of_color color in
+    G.rgb (darken (mix red old_red)) (darken (mix green old_green)) (darken (mix blue old_blue))
 
 let init_window () =
   G.open_graph "";
@@ -63,34 +64,50 @@ let draw_grid cols rows =
     G.moveto start_x ((G.current_y ()) + !cell_size)
   done
 
+(* make balls prettier by adding a gradient *)
+let pretty_ball x y color radius resolution =
+    let resolution = max 1 resolution in
+    (* color transformation to apply *)
+    let profile i c =
+        (i * 256 + (resolution - i + 1) * c) / (resolution + 1)
+    in
+    (* apply to all rgb components *)
+    let lighter i =
+        let (r, g, b) = rgb_of_color color in
+        G.rgb (profile i r) (profile i g) (profile i b)
+    in
+    (* radius shrinks *)
+    let radius_var i = (resolution - i) * radius / resolution in
+    for i = 0 to pred resolution do
+        G.set_color (lighter i);
+        let r = radius_var i in
+        G.fill_circle (x + (radius - r) / 4) (y + (radius - r) / 4) r
+    done
+
 let draw_ball ?select:(select=false) ball =
-  let p = Rules.position_of_ball ball in
-  let size = !cell_size in
-  let x = padding_left + Position.proj_x p * size + (size / 2) in
-  let y = padding_left + Position.proj_y p * size + (size / 2) in
-  let radius = (size - margin) / 2 in
-  begin
-    if select then
-      G.set_color G.red
-    else
-    if !colors_generated then
-      begin
-        let color = fst (List.find (fun cb -> Rules.eq_ball (snd cb) ball) !colors) in
-        G.set_color color
-      end
-    else
-      let color = generate_new_color G.white in
-      colors := (color,ball)::!colors;
-      G.set_color color
-  end;
-  if select then
-    begin
-      G.draw_circle x y radius;
-      G.draw_circle x y (radius+1);
-      (* G.draw_circle x y (radius+2) *)
-    end
-  else
-    G.fill_circle x y radius
+    let p = Rules.position_of_ball ball in
+    let size = !cell_size in
+    let x = padding_left + Position.proj_x p * size + (size / 2) in
+    let y = padding_left + Position.proj_y p * size + (size / 2) in
+    let radius = (size - margin) / 2 in
+    let color = (
+        if select then
+            G.red
+        else if !colors_generated then  begin
+            let color = fst (List.find (fun cb -> Rules.eq_ball (snd cb) ball) !colors) in
+            color
+        end else
+            let color = generate_new_color G.white in
+            colors := (color,ball)::!colors;
+            color
+    ) in
+    if select then begin
+        G.set_color G.red;
+        G.draw_circle x y radius;
+        G.draw_circle x y (radius+1);
+        (* G.draw_circle x y (radius+2) *)
+    end else
+        pretty_ball x y color radius 10
 
 (* hide drawing at position p *)
 let undraw_pos p =

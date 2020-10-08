@@ -12,6 +12,8 @@ keypress helper
 make checks keyboard
 redo move
 implement solver
+allow or disallow launching a ball on a direct neighbor
+darker balls + texture
 
 (TODO)
 automatic game generation
