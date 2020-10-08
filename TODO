@@ -9,7 +9,10 @@ ensure only one ball per position
 factorize apply move
 clean the code
 keypress helper
+make checks keyboard
 
 (TODO)
 implement solver
 automatic game generation
+load/save file
+redo move
