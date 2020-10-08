@@ -11,9 +11,9 @@ clean the code
 keypress helper
 make checks keyboard
 redo move
+implement solver
 
 (TODO)
-implement solver
 automatic game generation
 load/save file
 refactor undo_move/redo_move/apply_move + pop_hist/pop_fwd ?
