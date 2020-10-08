@@ -68,3 +68,6 @@ val is_win : game -> bool
 
 (** is the game over ? *)
 val is_blocked : game -> bool
+
+(** list all balls to redraw and positions to clear *)
+val changed : game -> (ball list) * (Position.t list) * game
