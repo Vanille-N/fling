@@ -1,6 +1,11 @@
 module G = Graphics
 module D = Draw
 
+let rec sleep = function
+    | 0 -> 0
+    | 1 -> 1
+    | n -> (sleep (n-1)) + (sleep (n-2))
+
 type action =
     | Move of Rules.move
     | Ball of Rules.ball
@@ -31,6 +36,8 @@ let message_no_moves = Printf.sprintf "This ball has no possible moves. Cancel w
 let message_lose = "There are no possible actions left. "
 let message_win = "There is only one ball left, YOU WIN ! "
 let message_exit = Printf.sprintf "Exit with %c" k_quit_game
+let message_solved = "SOLVED ! Press any key to explore solution"
+let message_nosolve = "No solution"
 
 (* max width of the grid printed *)
 let max_x = Rules.grid_width
@@ -103,7 +110,7 @@ let get_next_move game =
                             | Down -> Printf.sprintf "[v] = '%c'" k_mv_dn
                             | Left -> Printf.sprintf "[<] = '%c'" k_mv_lt
                             | Right -> Printf.sprintf "[>] = '%c'" k_mv_rt
-                            | Stay -> failwith "Unreachable @get_next_move::Ball" (* Stay is never valid *)
+                            | Stay -> failwith "Unreachable @get_next_move::Ball::else::Stay" (* Stay is never valid *)
                         )
                         |> String.concat " ; "
                     in D.draw_string (message_select_dir_before ^ dirs ^ message_select_dir_after)
@@ -163,8 +170,11 @@ and solve () =
 and loop game =
     let game = ref game in
     let stay = ref true in (* should we keep looping ? *)
+    D.draw_game max_x max_y !game;
     while !stay do
-        D.draw_game max_x max_y !game;
+        let (add, rem, g) = Rules.changed !game in
+        game := g;
+        D.redraw_game add rem;
         (* display relevant help message *)
         let message = ref "" in
             if Rules.is_win !game then message := message_win ^ message_exit
@@ -177,12 +187,13 @@ and loop game =
         let user = get_next_move !game in
         match user with
             | Move user ->
-                if List.mem user (Rules.moves !game) then
+                if List.mem user (Rules.moves !game) then (
                     (* { b; Stay } is never allowed regardless of b,
                     * ensuring that Stay will never be converted into a Position.t *)
-                    game := Rules.apply_move !game user
-            | Abort -> stay := false
-            | Ball _ -> failwith "Unreachable @loop::Ball" (* get_next_move will convert Ball -> Move *)
+                    game := Rules.apply_move !game user;
+                ) else D.draw_game max_x max_y !game
+            | Abort -> stay := false;
+            | Ball _ -> failwith "Unreachable @loop::while::Ball" (* get_next_move will convert Ball -> Move *)
             | Undo -> game := Rules.undo_move !game
             | Redo -> game := Rules.redo_move !game
     done;
@@ -192,19 +203,19 @@ and loop game =
 (* [solver game] solves the game if it is possible *)
 and solver game  =
     D.draw_game max_x max_y game;
-    let moves = Solver.solve game in
-    match moves with
-        | None -> D.draw_string "No solution!"; get_key_pressed (fun c -> main menu)
-        | Some moves ->
-            let g = List.fold_left (fun g m ->
-                D.draw_game max_x max_y g ;
-                D.draw_string "Solved!";
-                get_key_pressed (fun c -> ());
-                Rules.apply_move g m
-            ) game moves
-            in
-            D.draw_game max_x max_y g;
-            get_key_pressed (fun c -> main (("resolve", resolve)::menu))
+    let solver = Solver.solve game in
+    while Solver.step solver = None do
+        let _ = sleep 1 in
+        let (add, rem, _) = Rules.changed (Solver.game solver) in
+        D.redraw_game add rem;
+        D.draw_string (Printf.sprintf "Exploring %dth step" (Solver.count solver))
+    done;
+    let game = Solver.game solver in
+    D.draw_game max_x max_y game;
+    if Solver.step solver = Some true then D.draw_string message_solved
+    else D.draw_string message_nosolve;
+    get_key_pressed (fun x -> ());
+    loop game
 
 (* replay the previous game *)
 and replay () =
