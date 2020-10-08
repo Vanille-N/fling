@@ -1,5 +1,11 @@
 type direction = Up | Right | Down | Left | Stay
 
+(* I'm not a fan of the "if a ball touches another it can't be launched in that direction" rule.
+ * I think it lacks coherency with the case where a ball hits two balls that touch each other.
+ * I'll leave this boolean flag here, it may be turned on/off to select which rule to play by.
+ *)
+let allow_contact_launch = true
+
 let pos_of_dir = function
     | Up -> Position.from_int 0 1
     | Down -> Position.from_int 0 (-1)
@@ -220,8 +226,8 @@ let moves_ball g b =
             p := Position.move !p p';
         done;
         (* it was a ball, the move is valid *)
-        if is_ball g !p then
-            Some(make_move (make_ball b.id pos) m)
+        if allow_contact_launch && is_ball g !p then Some(make_move (make_ball b.id pos) m)
+        else if is_ball g !p && !p <> (Position.move pos p') then Some(make_move (make_ball b.id pos) m)
         else None
     )
 
