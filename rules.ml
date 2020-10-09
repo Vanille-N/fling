@@ -290,3 +290,28 @@ let write_game name g =
         Error "Invalid name (use only `azAZ09-_.`)"
     )
 
+let load_game name =
+    let name = ".data/" ^ name in
+    if Sys.file_exists name then (
+        let pos = ref [] in
+        let ic = open_in name in
+        let rec read b =
+            try
+                let line = input_line ic in
+                if line = "BEGIN" then read true
+                else if line = "END" then Ok ()
+                else (
+                    if b then (
+                        let sp = String.split_on_char ' ' line in
+                        let x = sp |> List.hd |> int_of_string in
+                        let y = sp |> List.tl |> List.hd |> int_of_string in
+                        pos := (Position.from_int x y) :: !pos;
+                    );
+                    read b
+                )
+            with e -> Error "Malformed file"
+        in
+        match read false with
+            | Ok () -> Ok !pos
+            | Error msg -> Error msg
+    ) else Error "File does not exist"

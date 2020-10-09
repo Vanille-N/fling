@@ -71,3 +71,9 @@ val is_blocked : game -> bool
 
 (** list all balls to redraw and positions to clear *)
 val changed : game -> (ball list) * (Position.t list) * game
+
+(** write game to channel. First input specifies the format to use *)
+val write_game : string -> game -> (unit, string) result
+
+(** load game from file *)
+val load_game : string -> (Position.t list, string) result
