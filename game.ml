@@ -1,5 +1,6 @@
 module G = Graphics
 module D = Draw
+open Printf
 
 let rec sleep = function
     | 0 -> 0
@@ -12,6 +13,8 @@ type action =
     | Undo
     | Redo
     | Abort
+    | Solve
+    | Write
 
 (* Controls *)
 (* Do not edit the markers, as they are tags for chctrls *)
@@ -25,6 +28,8 @@ let k_quit_game = 'i' (* KEY QUIT GAME *)
 let k_mv_undo = 'o' (* KEY MOVE UNDO *)
 let k_mv_redo = 'u' (* KEY MOVE REDO *)
 let k_fail = 'x' (* KEY FAIL *)
+let k_solve = 's' (* KEY SOLVE *)
+let k_write = 'w' (* KEY WRITE FILE *)
 
 (* max width of the grid printed *)
 let max_x = Rules.grid_width
@@ -33,16 +38,19 @@ let max_y = Rules.grid_height
 
 
 (* text data *)
-let msg_init_game = Printf.sprintf "Create all balls then press %c to start" k_launch
-let msg_select_ball = Printf.sprintf "Select a ball or exit with %c" k_quit_game
-let msg_undo_move = Printf.sprintf " or undo with %c" k_mv_undo
-let msg_redo_move = Printf.sprintf " or redo with %c" k_mv_redo
+let msg_init_game = sprintf "Create all balls. [start = '%c']" k_launch
+let msg_select_ball = sprintf "Select a ball. [exit = '%c']" k_quit_game
+let msg_undo_move = sprintf " [undo = '%c']" k_mv_undo
+let msg_redo_move = sprintf " [redo = '%c']" k_mv_redo
+let msg_solve = sprintf " [solve = '%c']" k_solve
+let msg_write = sprintf " [write = '%c']" k_write
+let msg_forcequit = sprintf " [forcequit = '%c']" k_fail
 let msg_select_dir_before = "Select a direction ("
-let msg_select_dir_after = Printf.sprintf ") or cancel with %c" k_mv_abrt
-let msg_no_moves = Printf.sprintf "This ball has no possible moves. Cancel with %c" k_mv_abrt
+let msg_select_dir_after = sprintf "). [cancel = '%c']" k_mv_abrt
+let msg_no_moves = sprintf "This ball has no possible moves. [cancel = '%c']" k_mv_abrt
 let msg_lose = "There are no possible actions left. "
 let msg_win = "There is only one ball left, YOU WIN ! "
-let msg_exit = Printf.sprintf "Exit with %c" k_quit_game
+let msg_exit = sprintf "[exit = '%c']" k_quit_game
 let msg_solved = "SOLVED ! Press any key to explore solution"
 let msg_nosolve = "No solution"
 
@@ -57,6 +65,8 @@ let rec get_ball game =
         if Char.chr (Char.code status.G.key) = k_quit_game then Abort
         else if Char.chr (Char.code status.G.key) = k_mv_undo then Undo
         else if Char.chr (Char.code status.G.key) = k_mv_redo then Redo
+        else if Char.chr (Char.code status.G.key) = k_solve then Solve
+        else if Char.chr (Char.code status.G.key) = k_write then Write
         else if Char.chr (Char.code status.G.key) = k_fail then failwith "Program terminated on keypress"
         else get_ball game (* not a valid key, keep waiting *)
     end else begin
@@ -107,19 +117,21 @@ let get_next_move game =
                     let dirs = allowed
                         |> List.map Rules.direction_of_move
                         |> List.map Rules.(function
-                            | Up -> Printf.sprintf "[^] = '%c'" k_mv_up
-                            | Down -> Printf.sprintf "[v] = '%c'" k_mv_dn
-                            | Left -> Printf.sprintf "[<] = '%c'" k_mv_lt
-                            | Right -> Printf.sprintf "[>] = '%c'" k_mv_rt
-                            | Stay -> failwith "Unreachable @get_next_move::Ball::else::Stay" (* Stay is never valid *)
+                            | Up -> sprintf "[^] = '%c'" k_mv_up
+                            | Down -> sprintf "[v] = '%c'" k_mv_dn
+                            | Left -> sprintf "[<] = '%c'" k_mv_lt
+                            | Right -> sprintf "[>] = '%c'" k_mv_rt
+                            (* Stay is never valid *)
+                            | Stay -> failwith "Unreachable @get_next_move::Ball::else::Stay"
                         )
                         |> String.concat " ; "
                     in D.draw_string (msg_select_dir_before ^ dirs ^ msg_select_dir_after)
                     );
             let d = get_ball_direction () in Move (Rules.make_move p d)
             )
-        | Move _ -> failwith "Unreachable @get_next_move::Move" (* only get_next_move can create Move *)
-        | other -> other
+        (* only get_next_move (current function) can create Move *)
+        | Move _ -> failwith "Unreachable @game::get_next_move::Move"
+        | other -> other (* pass as is *)
 
 
 (* create_game allows the player to create its own game by putting balls over the grid *)
@@ -153,9 +165,8 @@ let create_game () =
 
 (* A menu is a (string * (unit -> unit)) list.
  * The player chooses which function should be called *)
-let rec menu = [("solve new", solve);("play new", play);("exit", leave)]
-and menu_replay = [("solve new", solve);("resolve", resolve);
-                   ("play new", play); ("replay", replay); ("exit", leave)]
+let rec menu = [("play new", play);("exit", leave);("load file", load_file)]
+and menu_replay = [("play new", play);("exit", leave);("load file", load_file);("replay", replay)]
 (* [play ()] allows the player to create a new game, and then try to solve it *)
 and play () =
     game := create_game ();
@@ -183,6 +194,7 @@ and loop game =
             else message := msg_select_ball;
             if Rules.has_undo !game then message := !message ^ msg_undo_move;
             if Rules.has_redo !game then message := !message ^ msg_redo_move;
+            message := !message ^ msg_solve ^ msg_write ^ msg_forcequit;
             D.draw_string !message;
         (* get user action *)
         let user = get_next_move !game in
@@ -194,9 +206,12 @@ and loop game =
                     game := Rules.apply_move !game user;
                 ) else D.draw_game max_x max_y !game
             | Abort -> stay := false;
-            | Ball _ -> failwith "Unreachable @loop::while::Ball" (* get_next_move will convert Ball -> Move *)
+            (* get_next_move will convert Ball -> Move, Ball will never pass through *)
+            | Ball _ -> failwith "Unreachable @game::loop::while::Ball"
             | Undo -> game := Rules.undo_move !game
             | Redo -> game := Rules.redo_move !game
+            | Solve -> solver !game
+            | Write -> write_file !game
     done;
     D.draw_game max_x max_y !game;
     main menu_replay
@@ -209,14 +224,13 @@ and solver game  =
         let _ = sleep 1 in
         let (add, rem, _) = Rules.changed (Solver.game solver) in
         D.redraw_game add rem;
-        D.draw_string (Printf.sprintf "Exploring %dth step" (Solver.count solver))
+        D.draw_string (sprintf "Exploring %dth step" (Solver.count solver))
     done;
     let game = Solver.game solver in
     D.draw_game max_x max_y game;
     if Solver.step solver = Some true then D.draw_string msg_solved
     else D.draw_string msg_nosolve;
-    get_key_pressed (fun x -> ());
-    loop game
+    get_key_pressed (fun x -> ())
 
 (* replay the previous game *)
 and replay () =
