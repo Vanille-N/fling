@@ -4,13 +4,13 @@ enable exit game
 add replay
 add undo
 ensure only one ball per position
+keypress helper
+make checks keyboard
+redo move
 
 (GOOD)
 factorize apply move
 clean the code
-keypress helper
-make checks keyboard
-redo move
 implement solver
 allow or disallow launching a ball on a direct neighbor
 darker balls + texture
@@ -18,4 +18,5 @@ darker balls + texture
 (TODO)
 automatic game generation
 load/save file
-refactor undo_move/redo_move/apply_move + pop_hist/pop_fwd ?
+refactor undo_move/redo_move + pop_hist/pop_fwd ?
+refactor character input in game::get_ball
