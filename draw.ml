@@ -38,38 +38,38 @@ let generate_new_color color =
     G.rgb (darken (mix red old_red)) (darken (mix green old_green)) (darken (mix blue old_blue))
 
 let init_window () =
-  G.open_graph "";
-  G.set_window_title "Fling";
-  G.resize_window width height;
-  G.clear_graph()
+    G.open_graph "";
+    G.set_window_title "Fling";
+    G.resize_window width height;
+    G.clear_graph()
 
 let close_window () =
-  G.close_graph()
+    G.close_graph()
 
 let draw_grid cols rows =
-  G.set_color G.black;
-  let cell_width = (width - padding_left - padding_right) / cols in
-  let cell_height = (height - padding_up - padding_down) / rows in
-  cell_size := min cell_width cell_height;
-  let start_x, start_y = padding_left, padding_down in
-  let end_x, end_y = start_x + cols * !cell_size, start_y + rows * !cell_size in
-  G.moveto start_x start_y;
-  for i = 0 to cols do
-    G.lineto (G.current_x ()) end_y;
-    G.moveto ((G.current_x ()) + !cell_size) start_y
-  done;
-  G.moveto padding_left padding_down;
-  for i = 0 to rows do
-    G.lineto end_x (G.current_y ());
-    G.moveto start_x ((G.current_y ()) + !cell_size)
-  done
+    G.set_color G.black;
+    let cell_width = (width - padding_left - padding_right) / cols in
+    let cell_height = (height - padding_up - padding_down) / rows in
+    cell_size := min cell_width cell_height;
+    let start_x, start_y = padding_left, padding_down in
+    let end_x, end_y = start_x + cols * !cell_size, start_y + rows * !cell_size in
+    G.moveto start_x start_y;
+    for i = 0 to cols do
+        G.lineto (G.current_x ()) end_y;
+        G.moveto ((G.current_x ()) + !cell_size) start_y
+    done;
+    G.moveto padding_left padding_down;
+    for i = 0 to rows do
+        G.lineto end_x (G.current_y ());
+        G.moveto start_x ((G.current_y ()) + !cell_size)
+    done
 
 (* make balls prettier by adding a gradient *)
 let pretty_ball x y color radius resolution =
     let resolution = max 1 resolution in
     (* color transformation to apply *)
     let profile i c =
-        (i * 256 + (resolution - i + 1) * c) / (resolution + 1)
+        (256 * i / 2 + c * resolution - c * i / 2) / resolution
     in
     (* apply to all rgb components *)
     let lighter i =
@@ -119,12 +119,12 @@ let undraw_pos p =
     G.fill_circle x y (radius+3)
 
 let draw_balls balls =
-  List.iter draw_ball balls
+    List.iter draw_ball balls
 
 let draw_string s =
-  G.moveto (width/10) (height-padding_up);
-  G.set_color G.red;
-  G.draw_string s
+    G.moveto (width/10) (height-padding_up);
+    G.set_color G.red;
+    G.draw_string s
 
 (* hide text zone *)
 let clear_string () =
@@ -143,17 +143,20 @@ let redraw_game add rem =
     draw_balls add
 
 let position_of_coord x y =
-  let size = !cell_size in
-  let x', y' = x - padding_left, y - padding_down in
-  Position.from_int (x'/size) (y'/size)
+    let size = !cell_size in
+    let x', y' = x - padding_left, y - padding_down in
+    Position.from_int (x'/size) (y'/size)
 
 let draw_menu l =
-  G.clear_graph();
-  G.set_color G.black;
-  let (x,y) = (width/2, height/2) in
-  G.moveto x y;
-  ignore @@ List.fold_left (fun (i,y) (name,_) -> G.draw_string (Printf.sprintf "%d : %s" i name);
-                             let y' = y - line_height in
-                             G.moveto x y'; (i+1,y')) (0,y) l
+    G.clear_graph();
+    G.set_color G.black;
+    let (x,y) = (width/2, height/2) in
+    G.moveto x y;
+    ignore @@ List.fold_left (
+        fun (i,y) (name,_) ->
+            G.draw_string (Printf.sprintf "%d : %s" i name);
+            let y' = y - line_height in
+            G.moveto x y'; (i+1,y')
+        ) (0,y) l
 
 let ready b = colors_generated := b
