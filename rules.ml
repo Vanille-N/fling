@@ -35,8 +35,8 @@ type game = {
     grid: (Position.t, int) Hashtbl.t; (* direct access position -> id *)
     mutable hist: displacement list; (* history of all previous moves *)
     mutable fwd: displacement list; (* history of undone moves *)
-    added: ball list ref; (* balls to redraw *)
-    removed: Position.t list ref; (* positions to clear *)
+    mutable added: ball list; (* balls to redraw *)
+    mutable removed: Position.t list; (* positions to clear *)
 }
 
 let deep_copy g = {
@@ -116,7 +116,7 @@ let new_game bs =
             Hashtbl.add grid b.pos b.id
             end
             ) bs;
-    { balls=balls; grid=grid; hist=[]; fwd=[]; added=ref bs; removed=ref [] }
+    { balls=balls; grid=grid; hist=[]; fwd=[]; added=bs; removed=[] }
 
 let eq_ball b b' = b.id = b'.id
 
@@ -154,8 +154,8 @@ let rec apply_move g move =
         (* add move to the history of g *)
         hist_push g (make_disp id_move pstart (Some !p));
         (* record changes for display *)
-        g.added := (make_ball id_move !p) :: !(g.added);
-        g.removed := pstart :: !(g.removed);
+        g.added <- (make_ball id_move !p) :: g.added;
+        g.removed <- pstart :: g.removed;
         (* propagate the move to the ball we hit *)
         apply_move g (make_move (ball_of_position g !pnext) move.dir)
     end else begin
@@ -168,7 +168,7 @@ let rec apply_move g move =
         hist_push g (make_disp id_remove pstart None);
         fwd_clear g;
         (* record changes for display *)
-        g.removed := pstart :: !(g.removed);
+        g.removed <- pstart :: g.removed;
         g
     end
 
@@ -183,13 +183,13 @@ let undo_move g =
                 Hashtbl.add g.grid disp.old_pos disp.id;
                 Hashtbl.replace g.balls disp.id disp.old_pos;
                 (* record changes *)
-                g.added := (make_ball disp.id disp.old_pos) :: !(g.added);
-                g.removed := p :: !(g.removed);
+                g.added <- (make_ball disp.id disp.old_pos) :: g.added;
+                g.removed <- p :: g.removed;
             | None -> (* ball went off the edge, put it back in *)
                 Hashtbl.add g.grid disp.old_pos disp.id;
                 Hashtbl.add g.balls disp.id disp.old_pos;
                 (* record changes *)
-                g.added := (make_ball disp.id disp.old_pos) :: !(g.added);
+                g.added <- (make_ball disp.id disp.old_pos) :: g.added;
         ) disps;
     g
 
@@ -204,13 +204,13 @@ let redo_move g =
                 Hashtbl.add g.grid p disp.id;
                 Hashtbl.replace g.balls disp.id p;
                 (* record changes *)
-                g.added := (make_ball disp.id p) :: !(g.added);
-                g.removed := disp.old_pos :: !(g.removed);
+                g.added <- (make_ball disp.id p) :: g.added;
+                g.removed <- disp.old_pos :: g.removed;
             | None -> (* ball goes off the edge *)
                 Hashtbl.remove g.grid disp.old_pos;
                 Hashtbl.remove g.balls disp.id;
                 (* record changes *)
-                g.removed := disp.old_pos :: !(g.removed);
+                g.removed <- disp.old_pos :: g.removed;
         ) disps;
     g
 
@@ -258,8 +258,8 @@ let is_win g = (List.compare_length_with (get_balls g) 1) <= 0
 let is_blocked g = (moves g) = []
 
 let changed g =
-    let add = !(g.added) in
-    let rem = !(g.removed) in
-    g.added := [];
-    g.removed := [];
+    let add = g.added in
+    let rem = g.removed in
+    g.added <- [];
+    g.removed <- [];
     (add, rem, g)
