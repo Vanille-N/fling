@@ -227,6 +227,25 @@ and resolve () =
 (* leave the application *)
 and leave () =
     D.close_window()
+(* open previously saved file *)
+and load_file () =
+    let l = [("foo", fun x -> print_string (Sys.readdir ".data").(0))] in
+    let choice c =
+        let i = (int_of_char c) - (int_of_char '0') in
+        if 0 <= i && i < List.length l then
+            snd (List.nth l i) ()
+        else
+            load_file ()
+    in
+    D.draw_menu l;
+    get_key_pressed choice
+(* create new save file *)
+and write_file g =
+    let name = D.get_filename () in
+    let oc = open_out (".data/" ^ name) in
+    print_string name;
+    fprintf oc "%s\n" "foobar";
+    close_out oc;
 
 (* get the choice of the player *)
 and main l =
