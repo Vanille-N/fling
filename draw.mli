@@ -27,5 +27,5 @@ val ready : bool -> unit
 (** [draw_string s] draws the string [s] at the top of the board *)
 val draw_string : string -> unit
 
-(** get a name from the user *)
-val get_filename : unit -> string
+(** display text + information *)
+val text_feedback : string -> string list -> unit

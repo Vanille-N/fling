@@ -148,7 +148,7 @@ let position_of_coord x y =
     Position.from_int (x'/size) (y'/size)
 
 let draw_menu l =
-    G.clear_graph();
+    G.clear_graph ();
     G.set_color G.black;
     let (x,y) = (width/2, height/2) in
     G.moveto x y;
@@ -156,10 +156,27 @@ let draw_menu l =
         fun (i,y) (name,_) ->
             G.draw_string (Printf.sprintf "%d : %s" i name);
             let y' = y - line_height in
-            G.moveto x y'; (i+1,y')
+            G.moveto x y';
+            (i+1,y')
         ) (0,y) l
 
 let ready b = colors_generated := b
 
-let get_filename () =
-    "foo"
+let text_feedback txt info =
+    G.clear_graph ();
+    let (x, y) = (width/3, ref (3*height/4)) in
+    G.moveto x !y;
+    G.set_color G.red;
+    G.draw_string txt;
+    y := !y - 7;
+    G.moveto x !y;
+    G.set_color G.black;
+    G.lineto (2*width/3) !y;
+    List.iter (fun t ->
+        if !y > (height / 5) then (
+            y := !y - 15;
+            G.moveto x !y;
+            G.set_color G.blue;
+            G.draw_string t;
+            )
+        ) info
