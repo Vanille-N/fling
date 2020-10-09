@@ -36,6 +36,7 @@ let max_x = Rules.grid_width
 (* max height of the grid printed *)
 let max_y = Rules.grid_height
 
+let void x = ()
 
 (* text data *)
 let msg_init_game = sprintf "Create all balls. [start = '%c']" k_launch
@@ -165,8 +166,8 @@ let create_game () =
 
 (* A menu is a (string * (unit -> unit)) list.
  * The player chooses which function should be called *)
-let rec menu = [("play new", play);("exit", leave);("load file", load_file)]
-and menu_replay = [("play new", play);("exit", leave);("load file", load_file);("replay", replay)]
+let rec menu = [("exit", leave);("play new", play);("load file", load_file)]
+and menu_replay = [("exit", leave);("play new", play);("load file", load_file);("replay", replay)]
 (* [play ()] allows the player to create a new game, and then try to solve it *)
 and play () =
     game := create_game ();
@@ -211,7 +212,10 @@ and loop game =
             | Undo -> game := Rules.undo_move !game
             | Redo -> game := Rules.redo_move !game
             | Solve -> solver !game
-            | Write -> write_file !game
+            | Write -> (
+                write_file !game;
+                D.draw_game max_x max_y !game
+                )
     done;
     D.draw_game max_x max_y !game;
     main menu_replay
@@ -230,7 +234,7 @@ and solver game  =
     D.draw_game max_x max_y game;
     if Solver.step solver = Some true then D.draw_string msg_solved
     else D.draw_string msg_nosolve;
-    get_key_pressed (fun x -> ())
+    get_key_pressed void
 
 (* replay the previous game *)
 and replay () =
@@ -243,23 +247,45 @@ and leave () =
     D.close_window()
 (* open previously saved file *)
 and load_file () =
-    let l = [("foo", fun x -> print_string (Sys.readdir ".data").(0))] in
-    let choice c =
-        let i = (int_of_char c) - (int_of_char '0') in
-        if 0 <= i && i < List.length l then
-            snd (List.nth l i) ()
-        else
-            load_file ()
-    in
-    D.draw_menu l;
-    get_key_pressed choice
+    let name = get_filename () in
+    match Rules.load_game name with
+        | Ok pos -> (
+            (* directly adapted from create_game *)
+            D.ready false;
+            D.draw_game max_x max_y (Rules.new_game []);
+            let ball_count = ref 0 in
+            let rec add_balls l pos =
+                match pos with
+                    | [] -> (D.ready true; l)
+                    | p::more -> (
+                        flush stdout;
+                        let ball = Rules.make_ball !ball_count p in
+                        incr ball_count;
+                        D.draw_ball ball;
+                        add_balls (ball::l) more
+                        )
+            in
+            let balls = add_balls [] pos in
+            game := Rules.new_game balls;
+            loop (Rules.deep_copy !game)
+            )
+        | Error msg -> (
+            G.clear_graph ();
+            D.draw_string msg;
+            get_key_pressed void;
+            main menu
+            )
 (* create new save file *)
 and write_file g =
-    let name = D.get_filename () in
-    let oc = open_out (".data/" ^ name) in
-    print_string name;
-    fprintf oc "%s\n" "foobar";
-    close_out oc;
+    let name = get_filename () in
+    match Rules.write_game name g with
+        | Ok () -> ()
+        | Error msg -> (
+            G.clear_graph ();
+            D.draw_string msg;
+            get_key_pressed void;
+            main menu
+            )
 
 (* obtain filename from user *)
 and get_filename () =
