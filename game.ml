@@ -261,6 +261,68 @@ and write_file g =
     fprintf oc "%s\n" "foobar";
     close_out oc;
 
+(* obtain filename from user *)
+and get_filename () =
+    (* remove last char *)
+    let truncate sr =
+        if String.length !sr > 0 then
+            sr := String.sub !sr 0 (String.length !sr - 1)
+    in
+    (* add one more char *)
+    let append sr c =
+        if String.length !sr < 20 then
+            sr := !sr ^ (String.make 1 c)
+    in
+    (* test if sub is a subsequence of src. This is our filter condition *)
+    let has_substr sub src =
+        let rec aux i j =
+            if i = String.length sub then true
+            else if j = String.length src then false
+            else if sub.[i] = src.[j] then aux (i+1) (j+1)
+            else aux i (j+1)
+        in
+        aux 0 0
+    in
+    let display = ref "" in (* string currently visible *)
+    let continue = ref true in (* should we keep looping ? *)
+    let compatible = ref [] in (* filenames compatible (in the sense of has_substr) with display *)
+    let cycling = ref [] in (* cycle through possibilities on tab *)
+    let files = Array.to_list (Sys.readdir ".data") in
+    D.text_feedback "Enter a filename" files;
+    while !continue do
+        (* get input *)
+        let status = G.wait_next_event [G.Key_pressed] in
+        let key = status.G.key in
+        let code = Char.code key in
+        if code = 13 (* enter *) then (
+            (* open file *)
+            continue := false;
+        ) else if code = 27 (* escape *) then (
+            (* cancel *)
+            display := "";
+            continue := false;
+        ) else if code = 8 (* backspace *) then (
+            (* remove one character + update compatible *)
+            truncate display;
+            cycling := [];
+            compatible := List.filter (has_substr !display) files;
+        ) else if code = 9 (* tab *) then (
+            (* cycle through all compatible names *)
+            if !cycling = [] then cycling := !compatible;
+            if !cycling <> [] then (
+                display := List.hd !cycling;
+                cycling := List.tl !cycling;
+            );
+        ) else (
+            (* add one character + update compatible *)
+            append display key;
+            cycling := [];
+            compatible := List.filter (has_substr !display) files;
+        );
+        D.text_feedback !display !compatible;
+    done;
+    !display
+
 (* get the choice of the player *)
 and main l =
     let choice c =
