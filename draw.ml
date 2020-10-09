@@ -160,3 +160,6 @@ let draw_menu l =
         ) (0,y) l
 
 let ready b = colors_generated := b
+
+let get_filename () =
+    "foo"
