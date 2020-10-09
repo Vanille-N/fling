@@ -263,3 +263,30 @@ let changed g =
     g.added <- [];
     g.removed <- [];
     (add, rem, g)
+
+let is_valid_file str =
+    let is_ok = function
+        | 'a'..'z' | 'A'..'Z' | '0'..'9' | '-' | '_' | '.' -> true
+        | _ -> false
+    in
+    let rec aux = function
+        | [] -> true
+        | hd::tl -> is_ok hd && aux tl
+    in
+    String.length str > 0 && aux (List.init (String.length str) (String.get str))
+
+open Printf
+let write_game name g =
+    if is_valid_file name then (
+        let name = ".data/" ^ name in
+        let oc = open_out name in
+        fprintf oc "Fling\nv0\nBEGIN\n";
+        g.balls
+        |> fun h -> Hashtbl.fold (fun id pos acc -> pos :: acc) h []
+        |> List.iter (fun p -> fprintf oc "%d %d\n" (Position.proj_x p) (Position.proj_y p));
+        fprintf oc "END\n";
+        Ok ()
+    ) else (
+        Error "Invalid name (use only `azAZ09-_.`)"
+    )
+
