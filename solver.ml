@@ -22,8 +22,9 @@ let step solver =
     solver.count <- solver.count + 1;
     if solver.found then (
         match solver.fork with
+            | [] -> failwith "Unreachable @solver::step::if::[]" (* because we can't undo the move made before solving began *)
             (* we went back to the base level *)
-            | [] -> Some true
+            | [mv] -> Some true
             (* we have some moves to undo *)
             | hd::tl ->
                 solver.game <- Rules.undo_move solver.game;
@@ -31,8 +32,10 @@ let step solver =
                 None
     ) else (
         match solver.fork with
+            | [] -> failwith "Unreachable @solver::step::else::[]" (* same reason as above *)
+            (* all paths were explored *)
+            | []::[] -> Some false
             (* there are no possible paths left and no solution was found *)
-            | [] -> Some false
             | []::tl -> (
                 (* there are no possible moves left for this configuration *)
                 if Rules.is_win solver.game then (
