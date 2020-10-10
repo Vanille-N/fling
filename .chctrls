@@ -5,10 +5,8 @@
 
 # check if stdout is a terminal...
 if test -t 1; then
-
     # see if it supports colors...
     ncolors=$(tput colors)
-
     if test -n "$ncolors" && test $ncolors -ge 8; then
         bold="$(tput bold)"
         underline="$(tput smul)"
@@ -29,7 +27,7 @@ if [[ "$1" == "check" ]]; then
     if ls .ctrlset &>/dev/null; then
         exit 0
     else
-        echo "    ${yellow}You have not selected your controls yet${normal}"
+        echo "    ${yellow}You have not selected your controls yet.${normal}"
         echo -n "    ${yellow}Do you want to setup the game controls ? (${green}y${yellow}/${red}n${yellow}) ${normal}"
         read -rn1 ans
         echo ""
@@ -40,7 +38,7 @@ if [[ "$1" == "check" ]]; then
             echo -n "    ${bold}${red}Controls were not changed${normal}"
         fi
         touch .ctrlset
-        echo "${yellow}, you will not see this message again${normal}"
+        echo "${yellow}, you will not see this message again.${normal}"
         echo "    ${yellow}If you need to change the controls, run ${bold}${blue}\$ ./.chctrls${normal}"
         echo ""
     fi
