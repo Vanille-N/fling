@@ -39,19 +39,19 @@ let max_y = Rules.grid_height
 let void x = ()
 
 (* text data *)
-let msg_init_game = sprintf "Create all balls. [start = '%c']" k_launch
-let msg_select_ball = sprintf "Select a ball. [exit = '%c']" k_quit_game
-let msg_undo_move = sprintf " [undo = '%c']" k_mv_undo
-let msg_redo_move = sprintf " [redo = '%c']" k_mv_redo
-let msg_solve = sprintf " [solve = '%c']" k_solve
-let msg_write = sprintf " [write = '%c']" k_write
-let msg_forcequit = sprintf " [forcequit = '%c']" k_fail
+let msg_init_game = sprintf "Create all balls. [start '%c']" k_launch
+let msg_select_ball = sprintf "Select a ball. [exit '%c']" k_quit_game
+let msg_undo_move = sprintf " [undo '%c']" k_mv_undo
+let msg_redo_move = sprintf " [redo '%c']" k_mv_redo
+let msg_solve = sprintf " [solve '%c']" k_solve
+let msg_write = sprintf " [write '%c']" k_write
+let msg_forcequit = sprintf " [forcequit '%c']" k_fail
 let msg_select_dir_before = "Select a direction ("
-let msg_select_dir_after = sprintf "). [cancel = '%c']" k_mv_abrt
-let msg_no_moves = sprintf "This ball has no possible moves. [cancel = '%c']" k_mv_abrt
+let msg_select_dir_after = sprintf "). [cancel '%c']" k_mv_abrt
+let msg_no_moves = sprintf "This ball has no possible moves. [cancel '%c']" k_mv_abrt
 let msg_lose = "There are no possible actions left. "
 let msg_win = "There is only one ball left, YOU WIN ! "
-let msg_exit = sprintf "[exit = '%c']" k_quit_game
+let msg_exit = sprintf "[exit '%c']" k_quit_game
 let msg_solved = "SOLVED ! Press any key to explore solution"
 let msg_nosolve = "No solution"
 
@@ -224,11 +224,18 @@ and loop game =
 and solver game  =
     D.draw_game max_x max_y game;
     let solver = Solver.solve game in
-    while Solver.step solver = None do
-        let _ = sleep 1 in
+    let continue = ref true in
+    let pause = ref 8192 in
+    while !continue && Solver.step solver = None do
+        let _ = sleep 0 in
         let (add, rem, _) = Rules.changed (Solver.game solver) in
         D.redraw_game add rem;
-        D.draw_string (sprintf "Exploring %dth step" (Solver.count solver))
+        D.draw_string (sprintf "Exploring %dth step" (Solver.count solver));
+        if Solver.count solver = !pause then (
+            pause := 2 * !pause;
+            D.draw_string (sprintf "Exploring %dth step, still no solution. Continue ? (y/n)" (Solver.count solver));
+            get_key_pressed (fun c -> if c = 'n' then continue := false)
+        )
     done;
     let game = Solver.game solver in
     D.draw_game max_x max_y game;
@@ -248,33 +255,36 @@ and leave () =
 (* open previously saved file *)
 and load_file () =
     let name = get_filename () in
-    match Rules.load_game name with
-        | Ok pos -> (
-            (* directly adapted from create_game *)
-            D.ready false;
-            D.draw_game max_x max_y (Rules.new_game []);
-            let ball_count = ref 0 in
-            let rec add_balls l pos =
-                match pos with
-                    | [] -> (D.ready true; l)
-                    | p::more -> (
-                        flush stdout;
-                        let ball = Rules.make_ball !ball_count p in
-                        incr ball_count;
-                        D.draw_ball ball;
-                        add_balls (ball::l) more
-                        )
-            in
-            let balls = add_balls [] pos in
-            game := Rules.new_game balls;
-            loop (Rules.deep_copy !game)
-            )
-        | Error msg -> (
-            G.clear_graph ();
-            D.draw_string msg;
-            get_key_pressed void;
-            main menu
-            )
+    if name <> "" then (
+        match Rules.load_game name with
+            | Ok pos -> (
+                (* directly adapted from create_game *)
+                D.ready false;
+                D.draw_game max_x max_y (Rules.new_game []);
+                let ball_count = ref 0 in
+                let rec add_balls l pos =
+                    match pos with
+                        | [] -> (D.ready true; l)
+                        | p::more -> (
+                            flush stdout;
+                            let ball = Rules.make_ball !ball_count p in
+                            incr ball_count;
+                            D.draw_ball ball;
+                            add_balls (ball::l) more
+                            )
+                in
+                let balls = add_balls [] pos in
+                game := Rules.new_game balls;
+                loop (Rules.deep_copy !game)
+                )
+            | Error msg -> (
+                G.clear_graph ();
+                D.draw_string msg;
+                get_key_pressed void;
+                main menu
+                )
+    ) else main menu
+
 (* create new save file *)
 and write_file g =
     let name = get_filename () in
@@ -309,11 +319,11 @@ and get_filename () =
         in
         aux 0 0
     in
+    let files = Array.to_list (Sys.readdir ".data") in
     let display = ref "" in (* string currently visible *)
     let continue = ref true in (* should we keep looping ? *)
-    let compatible = ref [] in (* filenames compatible (in the sense of has_substr) with display *)
+    let compatible = ref files in (* filenames compatible (in the sense of has_substr) with display *)
     let cycling = ref [] in (* cycle through possibilities on tab *)
-    let files = Array.to_list (Sys.readdir ".data") in
     D.text_feedback "Enter a filename" files;
     while !continue do
         (* get input *)
@@ -343,7 +353,7 @@ and get_filename () =
             (* add one character + update compatible *)
             append display key;
             cycling := [];
-            compatible := List.filter (has_substr !display) files;
+            compatible := List.filter (has_substr !display) !compatible;
         );
         D.text_feedback !display !compatible;
     done;
