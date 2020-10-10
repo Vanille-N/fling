@@ -15,10 +15,11 @@ implement solver
 allow or disallow launching a ball on a direct neighbor
 darker balls + texture
 load/save file
+pause exploration after time
 
 (TODO)
 automatic game generation
 refactor undo_move/redo_move + pop_hist/pop_fwd ?
 refactor character input in game::get_ball
 criterion to trim the tree
-pause exploration after time
+smooth ball movement
