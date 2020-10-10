@@ -47,5 +47,28 @@ Other options have been considered (and rejected):
 - `type game = { by_line: ball list; by_column: ball list; }` solves the "list all balls on a line/column" problem, but is even harder and costly to update than both previous options
 - `type game = ball option array array` makes it extremely costly to list all balls, unless paired with a `ball -> Position.t` lookup table, which basically brings us back to the `Hashtbl` option
 
+#### Displacement, undo, redo
+
+```ocaml
+type displacement = {
+    id: int; (* ball that was displaced *)
+    old_pos: Position.t;
+    new_pos: Position.t option;
+}
+
+type game = {
+    mutable hist: displacement list; (* history of all previous moves *)
+    mutable fwd: displacement list; (* history of undone moves *)
+    (* other fields irrelevant *)
+}
 ```
-Then follow instructions.
+
+A `displacement` holds information on a single movement of a single ball. A movement by the user triggers at least two `displacement`s, as at least one ball is hit in addition to the initial ball.
+
+All `displacement`s are stored sequentially in `game` in order to allow restoring the game to any previous state.
+
+The `new_pos` field is `None` when the ball went off the edge of the grid, which leads to the following remark: any displacements caused by a single user move are stored sequentially in `hist` between two displacements with `None` for their `new_pos`.
+
+To undo a move, we simply pop from the `game.hist` stack until either the end or a second `None`. All `displacement`s obtained in this manner are rolled back in turn then added to the top of `fwd` in order to allow redoing a move symetrically.
+
+Having `hist` and `fwd` as `displacement list list` would have spared us from this process of looking for the last `displacement` of a `move`, but pushing to `hist` and `fwd` would have been less straightforward. In particular, it would have required a lot more logic in `apply_move`, which is complicated enough as is.
