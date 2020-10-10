@@ -40,12 +40,12 @@ type game = {
 }
 
 let deep_copy g = {
-    balls=Hashtbl.copy g.balls;
-    grid=Hashtbl.copy g.grid;
-    hist=g.hist;
-    fwd=g.fwd;
-    added=g.added;
-    removed=g.removed;
+    balls = Hashtbl.copy g.balls;
+    grid = Hashtbl.copy g.grid;
+    hist = g.hist;
+    fwd = g.fwd;
+    added = g.added;
+    removed = g.removed;
 }
 
 let hist_push g disp =
@@ -55,7 +55,7 @@ let fwd_push g disp =
     g.fwd <- disp :: g.fwd
 
 let make_disp id old_pos new_pos =
-    { id=id; old_pos=old_pos; new_pos=new_pos; }
+    { id = id; old_pos = old_pos; new_pos = new_pos; }
 
 let hist_pop g =
     (* get displacements until either:
@@ -99,7 +99,7 @@ let fwd_clear g =
 let grid_width = 15
 let grid_height = 15
 
-let make_ball id p = { id=id; pos=p }
+let make_ball id p = { id = id; pos = p }
 
 let ball_of_position game p =
     Hashtbl.find game.grid p
@@ -116,11 +116,11 @@ let new_game bs =
             Hashtbl.add grid b.pos b.id
             end
             ) bs;
-    { balls=balls; grid=grid; hist=[]; fwd=[]; added=bs; removed=[] }
+    { balls = balls; grid = grid; hist = []; fwd = []; added = bs; removed = [] }
 
 let eq_ball b b' = b.id = b'.id
 
-let make_move b d = { ball=b; dir=d; }
+let make_move b d = { ball = b; dir = d; }
 
 let is_ball g p = Hashtbl.mem g.grid p
 
@@ -226,8 +226,8 @@ let moves_ball g b =
             p := Position.move !p p';
         done;
         (* it was a ball, the move is valid *)
-        if allow_contact_launch && is_ball g !p then Some(make_move (make_ball b.id pos) m)
-        else if is_ball g !p && !p <> (Position.move pos p') then Some(make_move (make_ball b.id pos) m)
+        if allow_contact_launch && is_ball g !p then Some (make_move (make_ball b.id pos) m)
+        else if is_ball g !p && !p <> (Position.move pos p') then Some (make_move (make_ball b.id pos) m)
         else None
     )
 
@@ -246,6 +246,8 @@ let get_balls g =
     |> List.map (fun (i, p) -> make_ball i p)
 
 let position_of_ball b = b.pos
+
+let id_of_ball b = b.id
 
 let direction_of_move mv = mv.dir
 
@@ -285,6 +287,7 @@ let write_game name g =
         |> fun h -> Hashtbl.fold (fun id pos acc -> pos :: acc) h []
         |> List.iter (fun p -> fprintf oc "%d %d\n" (Position.proj_x p) (Position.proj_y p));
         fprintf oc "END\n";
+        close_out oc;
         Ok ()
     ) else (
         Error "Invalid name (use only `azAZ09-_.`)"
@@ -311,7 +314,9 @@ let load_game name =
                 )
             with e -> Error "Malformed file"
         in
-        match read false with
+        let res = read false in
+        close_in ic;
+        match res with
             | Ok () -> Ok !pos
             | Error msg -> Error msg
     ) else Error "File does not exist"
