@@ -1,8 +1,8 @@
 module G = Graphics
 
-let width = 800
+let width = 700
 
-let height = 800
+let height = 700
 
 let line_height = 25
 
@@ -10,11 +10,11 @@ let padding_left = 50
 
 let padding_right = 50
 
-let padding_up = 50
+let padding_up = 40
 
 let padding_down = 50
 
-let margin = 5
+let margin = 8
 
 let cell_size = ref 0
 
@@ -121,15 +121,16 @@ let undraw_pos p =
 let draw_balls balls =
     List.iter draw_ball balls
 
-let draw_string s =
-    G.moveto (width/10) (height-padding_up);
-    G.set_color G.red;
-    G.draw_string s
-
 (* hide text zone *)
 let clear_string () =
     G.set_color G.white;
     G.fill_rect 0 (height - padding_up - 5) width (height - padding_up - 10)
+
+let draw_string s =
+    clear_string ();
+    G.moveto (width/10) (height-padding_up);
+    G.set_color G.red;
+    G.draw_string s
 
 let draw_game cols rows game =
     G.clear_graph ();
