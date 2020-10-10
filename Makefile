@@ -9,3 +9,7 @@ clean:
 reset:
 	ocamlbuild -clean
 	rm .ctrlset &>/dev/null
+
+compress:
+	tar czf NEVEN_VILLANI-Fling.tar.gz --transform 's,^,NEVEN_VILLANI-Fling/,' \
+		Makefile *.ml *.mli *.md .chctrls .data
