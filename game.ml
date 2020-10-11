@@ -31,12 +31,10 @@ let k_fail = 'x' (* KEY FAIL *)
 let k_solve = 's' (* KEY SOLVE *)
 let k_write = 'w' (* KEY WRITE FILE *)
 
-(* max width of the grid printed *)
-let max_x = Rules.grid_width
-(* max height of the grid printed *)
-let max_y = Rules.grid_height
-
 let void x = ()
+
+let ball_highres = 10
+let ball_lowres = 4
 
 (* text data *)
 let msg_init_game = sprintf "Create all balls. [start '%c']" k_launch
@@ -74,7 +72,7 @@ let rec get_ball game =
         (* check if a ball was selected *)
         let (x,y) = (status.G.mouse_x,status.G.mouse_y) in
         let p = D.position_of_coord x y in
-        D.draw_game max_x max_y game;
+        D.draw_game game;
         if Rules.is_ball game p then
             begin
                 let ball = Rules.ball_of_position game p in
@@ -138,7 +136,8 @@ let get_next_move game =
 (* create_game allows the player to create its own game by putting balls over the grid *)
 let create_game () =
     D.ready false;
-    D.draw_game max_x max_y (Rules.new_game []);
+    D.ball_quality ball_highres;
+    D.draw_game (Rules.new_game []);
     D.draw_string msg_init_game;
     let ball_count = ref 0 in
     let rec add_balls l =
@@ -151,7 +150,7 @@ let create_game () =
             let p = D.position_of_coord x y in
             let (x',y') = Position.proj_x p, Position.proj_y p in
             (* balls can not be outside the grid *)
-            if 0 <= x' && x' < max_x && 0 <= y' && y' < max_y then
+            if 0 <= x' && x' < Rules.max_x && 0 <= y' && y' < Rules.max_y then
                 (* we don't have to check right now that the position is available because
                  * game will manage it *)
                 let ball = Rules.make_ball !ball_count p in
@@ -183,7 +182,7 @@ and solve () =
 and loop game =
     let game = ref game in
     let stay = ref true in (* should we keep looping ? *)
-    D.draw_game max_x max_y !game;
+    D.draw_game !game;
     while !stay do
         let (add, rem, g) = Rules.changed !game in
         game := g;
@@ -205,7 +204,7 @@ and loop game =
                     (* { b; Stay } is never allowed regardless of b,
                     * ensuring that Stay will never be converted into a Position.t *)
                     game := Rules.apply_move !game user;
-                ) else D.draw_game max_x max_y !game
+                ) else D.draw_game !game
             | Abort -> stay := false;
             (* get_next_move will convert Ball -> Move, Ball will never pass through *)
             | Ball _ -> failwith "Unreachable @game::loop::while::Ball"
@@ -214,15 +213,16 @@ and loop game =
             | Solve -> solver !game
             | Write -> (
                 write_file !game;
-                D.draw_game max_x max_y !game
+                D.draw_game !game
                 )
     done;
-    D.draw_game max_x max_y !game;
+    D.draw_game !game;
     main menu_replay
 
 (* [solver game] solves the game if it is possible *)
 and solver game  =
-    D.draw_game max_x max_y game;
+    D.ball_quality ball_lowres;
+    D.draw_game game;
     let solver = Solver.solve game in
     let continue = ref true in
     let pause = ref 8192 in
@@ -238,7 +238,8 @@ and solver game  =
         )
     done;
     let game = Solver.game solver in
-    D.draw_game max_x max_y game;
+    D.ball_quality ball_highres;
+    D.draw_game game;
     if Solver.step solver = Some true then D.draw_string msg_solved
     else D.draw_string msg_nosolve;
     get_key_pressed void
@@ -254,13 +255,14 @@ and leave () =
     D.close_window()
 (* open previously saved file *)
 and load_file () =
+    D.ball_quality ball_highres;
     let name = get_filename () in
     if name <> "" then (
         match Rules.load_game name with
             | Ok pos -> (
                 (* directly adapted from create_game *)
                 D.ready false;
-                D.draw_game max_x max_y (Rules.new_game []);
+                D.draw_game (Rules.new_game []);
                 let ball_count = ref 0 in
                 let rec add_balls l pos =
                     match pos with
@@ -324,7 +326,7 @@ and get_filename () =
     let continue = ref true in (* should we keep looping ? *)
     let compatible = ref files in (* filenames compatible (in the sense of has_substr) with display *)
     let cycling = ref [] in (* cycle through possibilities on tab *)
-    D.text_feedback "Enter a filename" files;
+    D.text_feedback "" files;
     while !continue do
         (* get input *)
         let status = G.wait_next_event [G.Key_pressed] in

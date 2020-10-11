@@ -7,15 +7,16 @@ ensure only one ball per position
 keypress helper
 make checks keyboard
 redo move
+allow or disallow launching a ball on a direct neighbor
+darker balls + texture
+when solving, draw lower resolution balls
+pause exploration after time
 
 (GOOD)
 factorize apply move
 clean the code
 implement solver
-allow or disallow launching a ball on a direct neighbor
-darker balls + texture
 load/save file
-pause exploration after time
 
 (TODO)
 automatic game generation

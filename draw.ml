@@ -22,6 +22,14 @@ let colors_generated = ref false
 
 let colors = ref []
 
+let ball_res = ref 1
+
+let ball_quality n = ball_res := n
+
+let max_x = 15
+
+let max_y = 15
+
 let rgb_of_color c =
     let r = c / (256 * 256) in
     let g = (c / 256) mod 256 in
@@ -46,20 +54,20 @@ let init_window () =
 let close_window () =
     G.close_graph()
 
-let draw_grid cols rows =
+let draw_grid () =
     G.set_color G.black;
-    let cell_width = (width - padding_left - padding_right) / cols in
-    let cell_height = (height - padding_up - padding_down) / rows in
+    let cell_width = (width - padding_left - padding_right) / Rules.max_x in
+    let cell_height = (height - padding_up - padding_down) / Rules.max_y in
     cell_size := min cell_width cell_height;
     let start_x, start_y = padding_left, padding_down in
-    let end_x, end_y = start_x + cols * !cell_size, start_y + rows * !cell_size in
+    let end_x, end_y = start_x + Rules.max_x * !cell_size, start_y + Rules.max_y * !cell_size in
     G.moveto start_x start_y;
-    for i = 0 to cols do
+    for i = 0 to Rules.max_x do
         G.lineto (G.current_x ()) end_y;
         G.moveto ((G.current_x ()) + !cell_size) start_y
     done;
     G.moveto padding_left padding_down;
-    for i = 0 to rows do
+    for i = 0 to Rules.max_y do
         G.lineto end_x (G.current_y ());
         G.moveto start_x ((G.current_y ()) + !cell_size)
     done
@@ -107,7 +115,7 @@ let draw_ball ?select:(select=false) ball =
         G.draw_circle x y (radius+1);
         (* G.draw_circle x y (radius+2) *)
     end else
-        pretty_ball x y color radius 10
+        pretty_ball x y color radius !ball_res
 
 (* hide drawing at position p *)
 let undraw_pos p =
@@ -132,9 +140,9 @@ let draw_string s =
     G.set_color G.red;
     G.draw_string s
 
-let draw_game cols rows game =
+let draw_game game =
     G.clear_graph ();
-    draw_grid cols rows;
+    draw_grid ();
     draw_balls (Rules.get_balls game)
 
 let redraw_game add rem =
@@ -168,9 +176,9 @@ let text_feedback txt info =
     let (x, y) = (width/3, ref (3*height/4)) in
     G.moveto x !y;
     G.set_color G.red;
-    G.draw_string txt;
+    G.draw_string (if txt <> "" then txt else "Enter text");
     y := !y - 7;
-    G.moveto x !y;
+    G.moveto (x-10) !y;
     G.set_color G.black;
     G.lineto (2*width/3) !y;
     List.iter (fun t ->
@@ -180,4 +188,4 @@ let text_feedback txt info =
             G.set_color G.blue;
             G.draw_string t;
             )
-        ) info
+        ) (if info <> [] then info else ["No match"])

@@ -8,8 +8,8 @@ type move
 type game
 
 (** export grid dimensions *)
-val grid_width: int
-val grid_height: int
+val max_x: int
+val max_y: int
 
 (** [make_ball id pos] returns a new ball idendified as [id] at position [pos] *)
 val make_ball : int -> Position.t -> ball

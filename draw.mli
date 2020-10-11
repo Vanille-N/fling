@@ -10,7 +10,7 @@ val draw_ball : ?select:bool -> Rules.ball -> unit
 
 (** [draw_game width height game] draw a grid of size width * height and
     draw the balls of the game [game] on the grid *)
-val draw_game : int -> int -> Rules.game -> unit
+val draw_game : Rules.game -> unit
 
 (** [redraw_game game] avoids redrawing everything and only removes and redraws the required balls *)
 val redraw_game : Rules.ball list -> Position.t list -> unit
@@ -29,3 +29,6 @@ val draw_string : string -> unit
 
 (** display text + information *)
 val text_feedback : string -> string list -> unit
+
+(** change resolution of balls drawn to adjust quality/speed *)
+val ball_quality : int -> unit
