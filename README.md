@@ -18,7 +18,7 @@ By decreasing importance
 
 #### Dematerialized balls
 
-The decicion most impactful to the rest of the project was the choice to make `game` store information on the balls only in a dematerialized manner. There is no actual `ball` used by `game`, `ball` only serves for interfacing with `game.ml`.
+The decicion most impactful to the rest of the project was the choice to make `game` store information on the balls only in a dematerialized manner. There is no actual `ball` used by `game`, `ball` only serves for interfacing with `game.ml`. Moreover, a `ball` carries no information on its position, and it only has a position relative to a `game`.
 
 ```ocaml
 type game = {
@@ -31,14 +31,14 @@ type game = {
 Instead of being a `ball list`, `game` is basically a `(Position.t, int) Hashtbl.t * (int, Position.t) Hashtbl.t` (with some more auxiliary information).
 
 Advantages:
-- `is_ball` is a simple O(1) hashtable lookup
-- so is `ball_of_position`
-- alternating between iterations on balls and positions as done in moves is straightforward as well
-- although `get_balls` is not as immediate as if `game` were a `ball list`, it remains easy
+- `is_ball` is a simple O(1) hashtable lookup;
+- so is `ball_of_position`;
+- alternating between iterations on balls and positions as done in moves is straightforward as well;
+- although `get_balls` is not as immediate as if `game` were a `ball list`, it remains easy.
 
 Drawbacks:
-- `game`s cannot be thoughtlessy moved around: deep copies may be costly and shallow copies may lead to unexpected side effects
-- a `ball` can record a position that is out of sync with the actual `game`, as `game` may hold information that has not been propagated to all balls still existing (this has been the cause of a difficult to track down bug when trying to implement the behavior described in the section about `redraw_game`)
+- `game`s cannot be thoughtlessy moved around: deep copies may be costly and shallow copies may lead to unexpected side effects;
+- the `game` must be passed down to function calls, since a `ball` on its own is not enough to know its position;
 - every new information requires updating two hashtables, failure to update one of them may lead to bugs that are extremely hard to identify. I have done my best not to separate related updates: calls to any of `Hashtbl.add`, `Hashtbl.remove`, `Hashtbl.update` are grouped together on consecutive lines.
 
 Altogether, performance of `is_ball` and `ball_of_position` was the main deciding factor.
