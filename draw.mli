@@ -6,14 +6,11 @@ val close_window : unit -> unit
 
 (** [draw_ball ~select:b ball] draw the ball [ball] on the window.
     Moreover, if b is true, then print red circle around the ball [ball] *)
-val draw_ball : ?select:bool -> Rules.ball -> unit
+val draw_ball : ?select:bool -> Rules.ball -> Position.t -> unit
 
 (** [draw_game width height game] draw a grid of size width * height and
     draw the balls of the game [game] on the grid *)
 val draw_game : Rules.game -> unit
-
-(** [redraw_game game] avoids redrawing everything and only removes and redraws the required balls *)
-val redraw_game : Rules.ball list -> Position.t list -> unit
 
 (** [draw_menu func_list] shows a menu that correspond to the possible choices of the player *)
 val draw_menu : (string * 'a) list -> unit
