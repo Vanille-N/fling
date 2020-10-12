@@ -234,10 +234,11 @@ and solver game  =
             get_key_pressed (fun c -> if c = 'n' then continue := false)
         )
     done;
+    if not (Solver.is_solved solver) then Solver.leave solver;
     let game = Solver.game solver in
     D.ball_quality ball_highres;
     D.draw_game game;
-    if Solver.step solver = Some true then D.draw_string msg_solved
+    if Solver.is_solved solver then D.draw_string msg_solved
     else D.draw_string msg_nosolve;
     get_key_pressed void
 
