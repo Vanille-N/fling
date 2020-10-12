@@ -7,10 +7,10 @@ type direction = Up | Right | Down | Left | Stay
 let allow_contact_launch = true
 
 let pos_of_dir = function
-    | Up -> Position.from_int 0 1
-    | Down -> Position.from_int 0 (-1)
-    | Left -> Position.from_int (-1) 0
-    | Right -> Position.from_int 1 0
+    | Up -> Position.of_int 0 1
+    | Down -> Position.of_int 0 (-1)
+    | Left -> Position.of_int (-1) 0
+    | Right -> Position.of_int 1 0
     | Stay -> failwith "Unreachable @pos_of_dir::Stay"
 
 (** a single operation of changing a ball's position *)
@@ -252,7 +252,7 @@ let load_game name =
                         let sp = String.split_on_char ' ' line in
                         let x = sp |> List.hd |> int_of_string in
                         let y = sp |> List.tl |> List.hd |> int_of_string in
-                        pos := (Position.from_int x y) :: !pos;
+                        pos := (Position.of_int x y) :: !pos;
                     );
                     read b
                 )

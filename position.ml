@@ -1,6 +1,6 @@
 type t = int * int
 
-let from_int x y = (x, y)
+let of_int x y = (x, y)
 
 let proj_x = fst
 
