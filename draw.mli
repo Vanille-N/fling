@@ -29,3 +29,6 @@ val text_feedback : string -> string list -> unit
 
 (** change resolution of balls drawn to adjust quality/speed *)
 val ball_quality : int -> unit
+
+(** draw the whole animated move *)
+val animate_ball : int -> Rules.ball * Position.t * Position.t -> unit

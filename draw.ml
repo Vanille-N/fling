@@ -1,34 +1,26 @@
 module G = Graphics
 
 let width = 700
-
 let height = 700
-
 let line_height = 25
-
 let padding_left = 50
-
 let padding_right = 50
-
 let padding_up = 40
-
 let padding_down = 50
-
 let margin = 8
-
 let cell_size = ref 0
-
 let colors_generated = ref false
-
 let colors = ref []
-
 let ball_res = ref 1
-
 let ball_quality n = ball_res := n
-
 let max_x = 15
-
 let max_y = 15
+
+let sleep n =
+    let i = ref 0 in
+    for j = 0 to n do
+        incr i;
+    done
 
 let rgb_of_color c =
     let r = c / (256 * 256) in
@@ -110,29 +102,46 @@ let draw_ball ?select:(select=false) ball p =
     ) in
     if select then begin
         G.set_color G.red;
-        G.draw_circle x y radius;
+        (* G.draw_circle x y radius; *)
         G.draw_circle x y (radius+1);
-        (* G.draw_circle x y (radius+2) *)
+        G.draw_circle x y (radius+2)
     end else
         pretty_ball x y color radius !ball_res
 
-(* hide drawing at position p *)
-let undraw_pos p =
+let hide x y =
     let size = !cell_size in
-    let x = padding_left + Position.proj_x p * size + (size / 2) in
-    let y = padding_left + Position.proj_y p * size + (size / 2) in
-    let radius = (size - margin) / 2 in
+    let radius = (size - margin) / 2  + 4 in
     G.set_color G.white;
-    G.fill_circle x y (radius+3)
+    G.fill_circle x y radius
+
+let animate_ball speed (ball, old_pos, new_pos) =
+    let size = !cell_size in
+    let old_x = padding_left + Position.proj_x old_pos * size + (size / 2) in
+    let old_y = padding_left + Position.proj_y old_pos * size + (size / 2) in
+    let new_x = padding_left + Position.proj_x new_pos * size + (size / 2) in
+    let new_y = padding_left + Position.proj_y new_pos * size + (size / 2) in
+    let radius = (size - margin) / 2 in
+    let color = fst (List.find (fun cb -> Rules.eq_ball (snd cb) ball) !colors) in
+    let amount = (abs (old_x - new_x) + abs (old_y - new_y)) * speed in
+    hide old_x old_y;
+    for i = 1 to amount do
+        let x = (i * new_x + (amount-i) * old_x) / amount in
+        let y = (i * new_y + (amount-i) * old_y) / amount in
+        pretty_ball x y color radius !ball_res;
+        sleep 20;
+        hide x y;
+    done;
+    if Rules.is_inside new_pos then pretty_ball new_x new_y color radius !ball_res
+    else hide new_x new_y
 
 (* hide text zone *)
 let clear_string () =
     G.set_color G.white;
-    G.fill_rect 0 (height - padding_up - 5) width (height - padding_up - 10)
+    G.fill_rect 0 (height-10) width (height)
 
 let draw_string s =
     clear_string ();
-    G.moveto (width/10) (height-padding_up);
+    G.moveto (width/10) (height-5);
     G.set_color G.red;
     G.draw_string s
 
@@ -146,7 +155,7 @@ let draw_game game =
 let position_of_coord x y =
     let size = !cell_size in
     let x', y' = x - padding_left, y - padding_down in
-    Position.from_int (x'/size) (y'/size)
+    Position.of_int (x'/size) (y'/size)
 
 let draw_menu l =
     G.clear_graph ();
