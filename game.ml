@@ -72,7 +72,7 @@ let rec get_ball game =
         (* check if a ball was selected *)
         let (x,y) = (status.G.mouse_x,status.G.mouse_y) in
         let p = D.position_of_coord x y in
-        D.draw_game game;
+        (* D.draw_game game; *)
         if Rules.is_ball game p then
             begin
                 let ball = Rules.ball_of_position game p in
@@ -150,7 +150,7 @@ let create_game () =
             let p = D.position_of_coord x y in
             let (x',y') = Position.proj_x p, Position.proj_y p in
             (* balls can not be outside the grid *)
-            if 0 <= x' && x' < Rules.max_x && 0 <= y' && y' < Rules.max_y then
+            if Rules.is_inside (Position.of_int x' y') then
                 (* we don't have to check right now that the position is available because
                  * game will manage it *)
                 let ball = Rules.make_ball !ball_count in
@@ -184,7 +184,7 @@ and loop game =
     let stay = ref true in (* should we keep looping ? *)
     D.draw_game !game;
     while !stay do
-        D.draw_game !game;
+        (* D.draw_game !game; *)
         (* display relevant help message *)
         let message = ref "" in
             if Rules.is_win !game then message := msg_win ^ msg_exit
@@ -201,13 +201,23 @@ and loop game =
                 if List.mem user (Rules.moves !game) then (
                     (* { b; Stay } is never allowed regardless of b,
                     * ensuring that Stay will never be converted into a Position.t *)
-                    game := Rules.apply_move !game user;
+                    let (g, update) = Rules.apply_move !game user in
+                    game := g;
+                    List.iter (D.animate_ball 20) update;
                 ) else D.draw_game !game
             | Abort -> stay := false;
             (* get_next_move will convert Ball -> Move, Ball will never pass through *)
             | Ball _ -> failwith "Unreachable @game::loop::while::Ball"
-            | Undo -> game := Rules.undo_move !game
-            | Redo -> game := Rules.redo_move !game
+            | Undo -> (
+                let (g, update) = Rules.undo_move !game in
+                game := g;
+                List.iter (D.animate_ball 20) update
+                )
+            | Redo -> (
+                let (g, update) = Rules.redo_move !game in
+                game := g;
+                List.iter (D.animate_ball 20) update
+                )
             | Solve -> solver !game
             | Write -> (
                 write_file !game;
@@ -226,7 +236,7 @@ and solver game  =
     let pause = ref 8192 in
     while !continue && Solver.step solver = None do
         let _ = sleep 5 in
-        D.draw_game (Solver.game solver);
+        (* D.draw_game (Solver.game solver); *)
         D.draw_string (sprintf "Exploring %dth step" (Solver.count solver));
         if Solver.count solver = !pause then (
             pause := 2 * !pause;
