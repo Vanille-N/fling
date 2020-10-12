@@ -89,6 +89,11 @@ let is_inside p =
     and y = Position.proj_y p in
     0 <= x && x < max_x && 0 <= y && y < max_y
 
+let unpack (mv:displacement) =
+    (mv.id, mv.old_pos, mv.new_pos)
+
+let disp_rev (id, old_pos, new_pos) = (id, new_pos, old_pos)
+
 (* each iteration of [apply_move] calculates the new position for a single ball
  * and recursively propagates the move to the 0 or 1 balls that were hit.
  * It stops when a ball goes off the edge.
@@ -130,8 +135,9 @@ let apply_move g move =
         end
     in
     let g = aux g move.ball in
-    g.hist <- (List.rev !moved) :: g.hist;
-    g
+    let moved = List.rev !moved in
+    g.hist <- moved :: g.hist;
+    (g, List.map unpack moved)
 
 let undo_move g =
     let disps = (match g.hist with [] -> [] | hd::tl -> (g.hist <- tl; hd)) in
@@ -152,7 +158,7 @@ let undo_move g =
                 Hashtbl.add g.balls disp.id disp.old_pos;
         ) disps;
     if disps <> [] then g.fwd <- disps :: g.fwd;
-    g
+    (g, List.map (fun mv -> disp_rev (unpack mv)) disps |> List.rev)
 
 let redo_move g =
     let disps = (match g.fwd with [] -> [] | hd::tl -> (g.fwd <- tl; hd)) in
@@ -168,7 +174,7 @@ let redo_move g =
                 Hashtbl.remove g.balls disp.id;
         ) disps;
     if disps <> [] then g.hist <- disps :: g.hist;
-    g
+    (g, List.map unpack disps)
 
 let moves_ball g (b:ball) =
     (* for each possible move: *)

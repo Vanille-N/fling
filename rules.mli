@@ -25,13 +25,13 @@ val eq_ball : ball -> ball -> bool
 val make_move : ball -> direction -> move
 
 (** [apply_move game move] returns a new game where [move] has been applied to [game] *)
-val apply_move : game -> move -> game
+val apply_move : game -> move -> game * (ball * Position.t * Position.t) list
 
 (** [undo_move game] rolls back the last move. Repeatable. *)
-val undo_move : game -> game
+val undo_move : game -> game * (ball * Position.t * Position.t) list
 
 (** [redo_move game] re-applies the last undone move. Repeatable *)
-val redo_move : game -> game
+val redo_move : game -> game * (ball * Position.t * Position.t) list
 
 (** [moves game] returns all the valid moves possible for [game] *)
 val moves : game -> move list
@@ -77,3 +77,6 @@ val load_game : string -> (Position.t list, string) result
 
 (** forget about all moves that were undone *)
 val clear_fwd : game -> unit
+
+(** is the position inside the grid ? *)
+val is_inside : Position.t -> bool
