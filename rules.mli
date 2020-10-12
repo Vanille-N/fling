@@ -12,10 +12,10 @@ val max_x: int
 val max_y: int
 
 (** [make_ball id pos] returns a new ball idendified as [id] at position [pos] *)
-val make_ball : int -> Position.t -> ball
+val make_ball : int -> ball
 
 (** [new_game ball_list] returns a new game form a list of balls [ball_list] *)
-val new_game : ball list -> game
+val new_game : (ball * Position.t) list -> game
 
 (** [eq_ball ball ball'] returns true if and only if ball and ball' are equals
     indenpendetly from their position since balls can move *)
@@ -49,10 +49,7 @@ val is_ball : game -> Position.t -> bool
 val ball_of_position : game -> Position.t -> ball
 
 (** [position_of_ball ball] returns the position of the ball [ball] *)
-val position_of_ball : ball -> Position.t
-
-(** useful to identify a ball *)
-val id_of_ball : ball -> int
+val position_of_ball : game -> ball -> Position.t
 
 (** [game] is not immutable, we need a way to deep copy it *)
 val deep_copy : game -> game
@@ -71,9 +68,6 @@ val is_win : game -> bool
 
 (** is the game over ? *)
 val is_blocked : game -> bool
-
-(** list all balls to redraw and positions to clear *)
-val changed : game -> (ball list) * (Position.t list) * game
 
 (** write game to channel. First input specifies the format to use *)
 val write_game : string -> game -> (unit, string) result
