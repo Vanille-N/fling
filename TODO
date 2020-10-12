@@ -11,12 +11,12 @@ allow or disallow launching a ball on a direct neighbor
 darker balls + texture
 when solving, draw lower resolution balls
 pause exploration after time
+implement solver
+load/save file
 
 (GOOD)
 factorize apply move
 clean the code
-implement solver
-load/save file
 
 (TODO)
 automatic game generation
@@ -24,3 +24,4 @@ refactor undo_move/redo_move + pop_hist/pop_fwd ?
 refactor character input in game::get_ball
 criterion to trim the tree
 smooth ball movement
+hist + fwd are displacement list list
