@@ -53,7 +53,7 @@ Other options have been considered (and rejected):
 type displacement = {
     id: int; (* ball that was displaced *)
     old_pos: Position.t;
-    new_pos: Position.t option;
+    new_pos: Position.t;
 }
 
 type game = {
@@ -65,13 +65,9 @@ type game = {
 
 A `displacement` holds information on a single movement of a single ball. A movement by the user triggers at least two `displacement`s, as at least one ball is hit in addition to the initial ball.
 
-All `displacement`s are stored sequentially in `game` in order to allow restoring the game to any previous state.
+All `displacement`s are stored in `game` in groups triggered by the same user movement in order to allow restoring the game to any previous state.
 
-The `new_pos` field is `None` when the ball went off the edge of the grid, which leads to the following remark: any displacements caused by a single user move are stored sequentially in `hist` between two displacements with `None` for their `new_pos`.
-
-To undo a move, we simply pop from the `game.hist` stack until either the end or a second `None`. All `displacement`s obtained in this manner are rolled back in turn then added to the top of `fwd` in order to allow redoing a move symetrically.
-
-Having `hist` and `fwd` as `displacement list list` would have spared us from this process of looking for the last `displacement` of a `move`, but pushing to `hist` and `fwd` would have been less straightforward. In particular, it would have required a lot more logic in `apply_move`, which is complicated enough as is.
+To undo a move, we simply take the top element from the `game.hist` stack. All `displacement`s obtained in this manner are rolled back in turn then added to the top of `fwd` in order to allow redoing a move symetrically.
 
 #### Asynchronous game solver
 
@@ -86,3 +82,10 @@ Each call to `step` will advance the computation by one move (`apply_move` if ne
 One notable advantage is the possibility of implementing an "abort solution search" functionality, that would be virtually impossible to implement cleanly were `solve` blocking all computation until a solution was found.
 
 The combination of this behavior with `undo_move`/`redo_move` allows for presenting the solution to the user. Instead of simply being told that "the solution exists", the user is put in control of a game state where a sequence of moves leading to the solution has been memorized in the `fwd` field of `game`. Pressing the keys associated with undo/redo allows for exploring the solution.
+
+## Some additions
+By decreasing complexity
+
+#### Game controls and help messages
+#### Prettier display for balls, animations
+#### Optional rule

@@ -74,3 +74,6 @@ val write_game : string -> game -> (unit, string) result
 
 (** load game from file *)
 val load_game : string -> (Position.t list, string) result
+
+(** forget about all moves that were undone *)
+val clear_fwd : game -> unit
