@@ -76,7 +76,7 @@ let rec get_ball game =
         if Rules.is_ball game p then
             begin
                 let ball = Rules.ball_of_position game p in
-                D.draw_ball ~select:true ball; (* to show which ball has been selected *)
+                D.draw_ball ~select:true ball p; (* to show which ball has been selected *)
                 Ball ball
             end
         else
@@ -153,10 +153,10 @@ let create_game () =
             if 0 <= x' && x' < Rules.max_x && 0 <= y' && y' < Rules.max_y then
                 (* we don't have to check right now that the position is available because
                  * game will manage it *)
-                let ball = Rules.make_ball !ball_count p in
+                let ball = Rules.make_ball !ball_count in
                 incr ball_count;
-                D.draw_ball ball;
-                add_balls (ball::l)
+                D.draw_ball ball p;
+                add_balls ((ball, p)::l)
             else
                 add_balls l
     in
@@ -184,9 +184,7 @@ and loop game =
     let stay = ref true in (* should we keep looping ? *)
     D.draw_game !game;
     while !stay do
-        let (add, rem, g) = Rules.changed !game in
-        game := g;
-        D.redraw_game add rem;
+        D.draw_game !game;
         (* display relevant help message *)
         let message = ref "" in
             if Rules.is_win !game then message := msg_win ^ msg_exit
@@ -227,9 +225,8 @@ and solver game  =
     let continue = ref true in
     let pause = ref 8192 in
     while !continue && Solver.step solver = None do
-        let _ = sleep 0 in
-        let (add, rem, _) = Rules.changed (Solver.game solver) in
-        D.redraw_game add rem;
+        let _ = sleep 5 in
+        D.draw_game (Solver.game solver);
         D.draw_string (sprintf "Exploring %dth step" (Solver.count solver));
         if Solver.count solver = !pause then (
             pause := 2 * !pause;
@@ -269,10 +266,10 @@ and load_file () =
                         | [] -> (D.ready true; l)
                         | p::more -> (
                             flush stdout;
-                            let ball = Rules.make_ball !ball_count p in
+                            let ball = Rules.make_ball !ball_count in
                             incr ball_count;
-                            D.draw_ball ball;
-                            add_balls (ball::l) more
+                            D.draw_ball ball p;
+                            add_balls ((ball, p)::l) more
                             )
                 in
                 let balls = add_balls [] pos in
