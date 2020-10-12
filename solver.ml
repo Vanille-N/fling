@@ -1,3 +1,5 @@
+module D = Draw
+
 type async_solver = {
     mutable game: Rules.game;
     mutable fork: Rules.move list list;
@@ -55,7 +57,9 @@ let rec leave solver =
         | [] -> failwith "Unreachable @solver::leave::[]"
         | [hd] -> Rules.clear_fwd solver.game
         | hd::tl -> (
-            solver.game <- Rules.undo_move solver.game;
+            let (g, update) = Rules.undo_move solver.game in
+            solver.game <- g;
+            List.iter (D.animate_ball 0) update;
             solver.fork <- tl;
             leave solver
             )
@@ -69,7 +73,9 @@ let step solver =
             | [mv] -> Some true
             (* we have some moves to undo *)
             | hd::tl ->
-                solver.game <- Rules.undo_move solver.game;
+                let (g, update) = Rules.undo_move solver.game in
+                solver.game <- g;
+                List.iter (D.animate_ball 0) update;
                 solver.fork <- tl;
                 None
     ) else (
@@ -84,15 +90,18 @@ let step solver =
                     solver.found <- true;
                     None
                 ) else (
-                    solver.game <- Rules.undo_move solver.game;
+                    let (g, update) = Rules.undo_move solver.game in
+                    solver.game <- g;
+                    List.iter (D.animate_ball 0) update;
                     solver.fork <- tl;
                     None
                 )
             )
             | (m::more)::tl -> (
                 (* m is a possible unexplored move *)
-                let g = Rules.apply_move solver.game m in
+                let (g, update) = Rules.apply_move solver.game m in
                 solver.game <- g;
+                List.iter (D.animate_ball 0) update;
                 solver.fork <- (Rules.moves solver.game)::more::tl;
                 None
             )
