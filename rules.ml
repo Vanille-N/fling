@@ -87,7 +87,7 @@ let is_ball g p = Hashtbl.mem g.grid p
 let is_inside p =
     let x = Position.proj_x p
     and y = Position.proj_y p in
-    0 <= x && x < max_x && 0 <= y && y <= max_y
+    0 <= x && x < max_x && 0 <= y && y < max_y
 
 (* each iteration of [apply_move] calculates the new position for a single ball
  * and recursively propagates the move to the 0 or 1 balls that were hit.
