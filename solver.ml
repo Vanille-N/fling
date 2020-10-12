@@ -48,6 +48,17 @@ let is_solved solver = solver.found
         )
     in aux (Rules.get_balls g) *)
 
+let is_solved solver = solver.found
+
+let rec leave solver =
+    match solver.fork with
+        | [] -> failwith "Unreachable @solver::leave::[]"
+        | [hd] -> Rules.clear_fwd solver.game
+        | hd::tl -> (
+            solver.game <- Rules.undo_move solver.game;
+            solver.fork <- tl;
+            leave solver
+            )
 
 let step solver =
     solver.count <- solver.count + 1;

@@ -16,3 +16,9 @@ val game : async_solver -> Rules.game
 
 (** get the number of steps made by the solver *)
 val count : async_solver -> int
+
+(** clear moves *)
+val leave : async_solver -> unit
+
+(** did we find a solution ? *)
+val is_solved : async_solver -> bool
