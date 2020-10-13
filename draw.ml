@@ -17,8 +17,9 @@ let max_x = 15
 let max_y = 15
 
 (* some colors *)
-let red = G.rgb 255 0 0
+let red = G.rgb 200 0 0
 let gray = G.rgb 128 128 128
+let blue = G.rgb 0 100 200
 
 let sleep n =
     let i = ref 0 in
@@ -95,7 +96,7 @@ let draw_ball ?select:(select=false) ball p =
     let radius = (size - margin) / 2 in
     let color = (
         if select then
-            G.red
+            red
         else if !colors_generated then  begin
             let color = fst (List.find (fun cb -> Rules.eq_ball (snd cb) ball) !colors) in
             color
@@ -105,7 +106,7 @@ let draw_ball ?select:(select=false) ball p =
             color
     ) in
     if select then begin
-        G.set_color G.red;
+        G.set_color red;
         (* G.draw_circle x y radius; *)
         G.draw_circle x y (radius+1);
         G.draw_circle x y (radius+2)
@@ -127,7 +128,7 @@ let coord_of_position p = (
 let position_of_coord x y =
     let size = !cell_size in
     let x', y' = x - padding_left, y - padding_down in
-    Position.of_int (x'/size) (y'/size)
+    Position.of_ints (x'/size) (y'/size)
 
 let animate_ball speed (ball, old_pos, new_pos) =
     let size = !cell_size in
@@ -163,7 +164,7 @@ let clear_string () =
 let draw_string s =
     clear_string ();
     G.moveto (width/10) (height-5);
-    G.set_color G.red;
+    G.set_color red;
     G.draw_string s
 
 let draw_game game =
@@ -199,15 +200,21 @@ let text_feedback txt info =
         G.set_color gray;
         G.draw_string "Enter text"
     );
-    y := !y - 7;
+    y := !y - 6;
     G.moveto (x-10) !y;
     G.set_color G.black;
     G.lineto (2*width/3) !y;
-    List.iter (fun t ->
-        if !y > (height / 5) then (
-            y := !y - 15;
-            G.moveto x !y;
-            G.set_color G.blue;
-            G.draw_string t;
-            )
-        ) (if info <> [] then info else ["No match"])
+    if info <> [] then (
+        List.iter (fun t ->
+            if !y > (height / 5) then (
+                y := !y - 15;
+                G.moveto x !y;
+                G.set_color blue;
+                G.draw_string t;
+                )
+            ) info
+    ) else (
+        G.moveto x (!y-15);
+        G.set_color gray;
+        G.draw_string "No match"
+    )

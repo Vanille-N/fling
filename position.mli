@@ -1,6 +1,6 @@
 type t
 
-val of_int : int -> int -> t
+val of_ints : int -> int -> t
 
 val proj_x : t -> int
 

@@ -8,10 +8,10 @@ type async_solver = {
 }
 
 let solve game = {
-    game=game;
-    fork=[Rules.moves game];
-    found=false;
-    count=0;
+    game = game;
+    fork = [Rules.moves game];
+    found = false;
+    count = 0;
 }
 
 let game solver = solver.game
@@ -55,7 +55,7 @@ let is_solved solver = solver.found
 let rec leave solver =
     match solver.fork with
         | [] -> failwith "Unreachable @solver::leave::[]"
-        | [hd] -> Rules.clear_fwd solver.game
+        | [hd] -> Rules.clear_redo solver.game
         | hd::tl -> (
             let (g, update) = Rules.undo_move solver.game in
             solver.game <- g;
