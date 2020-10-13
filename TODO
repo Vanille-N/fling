@@ -25,3 +25,6 @@ refactor character input in game::get_ball
 criterion to trim the tree
 smooth ball movement
 hist + fwd are displacement list list
+update doc
+redraw grid
+add doc-related files to make compress
