@@ -1,3 +1,5 @@
+(** Coordinates abstraction *)
+
 type t
 
 val of_ints : int -> int -> t

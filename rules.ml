@@ -4,14 +4,14 @@ type direction = Up | Right | Down | Left | Stay
  * I think it lacks coherency with the case where a ball hits two balls that touch each other.
  * I'll leave this boolean flag here, it may be turned on/off to select which rule to play by.
  *)
-let allow_contact_launch = true
+let allow_contact_launch = false
 
 let pos_of_dir = function
-    | Up -> Position.of_int 0 1
-    | Down -> Position.of_int 0 (-1)
-    | Left -> Position.of_int (-1) 0
-    | Right -> Position.of_int 1 0
-    | Stay -> failwith "Unreachable @pos_of_dir::Stay"
+    | Up -> Position.of_ints 0 1
+    | Down -> Position.of_ints 0 (-1)
+    | Left -> Position.of_ints (-1) 0
+    | Right -> Position.of_ints 1 0
+    | Stay -> failwith "Unreachable @rules::pos_of_dir::Stay"
 
 (** a single operation of changing a ball's position *)
 type displacement = {
@@ -61,7 +61,7 @@ let ball_of_position game p =
 let position_of_ball game b =
     Hashtbl.find game.balls b
 
-let clear_fwd game =
+let clear_redo game =
     game.fwd <- []
 
 let new_game bs =
@@ -94,7 +94,7 @@ let closest_inside p =
     and y = Position.proj_y p in
     let x = min (max_x - 1) (max 0 x)
     and y = min (max_y - 1) (max 0 y) in
-    Position.of_int x y
+    Position.of_ints x y
 
 let unpack (mv:displacement) =
     (mv.id, mv.old_pos, mv.new_pos)
@@ -137,7 +137,7 @@ let apply_move g move =
             (* add move to the history of g
              * this marks the end of a move (see more in pop_hist) *)
             moved := (make_disp id_remove pstart !p) :: !moved;
-            clear_fwd g;
+            clear_redo g;
             g
         end
     in
@@ -148,11 +148,6 @@ let apply_move g move =
 
 let undo_move g =
     let disps = (match g.hist with [] -> [] | hd::tl -> (g.hist <- tl; hd)) in
-    List.iter (fun (disp:displacement) ->
-        Printf.printf "[%d %s->%s]" disp.id (Position.to_string disp.old_pos) (Position.to_string disp.new_pos);
-        ) disps;
-    Printf.printf "\n";
-    flush stdout;
     (* for each displacement... *)
     List.iter (fun disp ->
         match disp.new_pos with
@@ -265,7 +260,7 @@ let load_game name =
                         let sp = String.split_on_char ' ' line in
                         let x = sp |> List.hd |> int_of_string in
                         let y = sp |> List.tl |> List.hd |> int_of_string in
-                        pos := (Position.of_int x y) :: !pos;
+                        pos := (Position.of_ints x y) :: !pos;
                     );
                     read b
                 )

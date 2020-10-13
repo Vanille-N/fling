@@ -17,14 +17,15 @@ load/save file
 (GOOD)
 factorize apply move
 clean the code
+smooth ball movement
+redraw grid
+hist + fwd are displacement list list
+add doc-related files to make compress
+clear queued events
 
 (TODO)
 automatic game generation
 refactor undo_move/redo_move + pop_hist/pop_fwd ?
 refactor character input in game::get_ball
 criterion to trim the tree
-smooth ball movement
-hist + fwd are displacement list list
 update doc
-redraw grid
-add doc-related files to make compress
