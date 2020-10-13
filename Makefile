@@ -17,3 +17,7 @@ compress:
 doc:
 	ocamlbuild fling.docdir/index.html
 	xdg-open fling.docdir/index.html &
+
+run:
+	make
+	./fling
