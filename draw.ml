@@ -23,7 +23,7 @@ let gray = G.rgb 128 128 128
 let sleep n =
     let i = ref 0 in
     for j = 0 to n do
-        incr i;
+        i := Random.int 1024;
     done
 
 let rgb_of_color c =
@@ -118,12 +118,21 @@ let hide x y =
     G.set_color G.white;
     G.fill_circle x y radius
 
+let coord_of_position p = (
+    let size = !cell_size in
+    padding_left + Position.proj_x p * size + (size / 2),
+    padding_left + Position.proj_y p * size + (size / 2)
+    )
+
+let position_of_coord x y =
+    let size = !cell_size in
+    let x', y' = x - padding_left, y - padding_down in
+    Position.of_int (x'/size) (y'/size)
+
 let animate_ball speed (ball, old_pos, new_pos) =
     let size = !cell_size in
-    let old_x = padding_left + Position.proj_x old_pos * size + (size / 2) in
-    let old_y = padding_left + Position.proj_y old_pos * size + (size / 2) in
-    let new_x = padding_left + Position.proj_x new_pos * size + (size / 2) in
-    let new_y = padding_left + Position.proj_y new_pos * size + (size / 2) in
+    let (old_x, old_y) = coord_of_position old_pos in
+    let (new_x, new_y) = coord_of_position new_pos in
     let radius = (size - margin) / 2 in
     let color = fst (List.find (fun cb -> Rules.eq_ball (snd cb) ball) !colors) in
     let amount = (abs (old_x - new_x) + abs (old_y - new_y)) * speed in
@@ -131,9 +140,17 @@ let animate_ball speed (ball, old_pos, new_pos) =
     for i = 1 to amount do
         let x = (i * new_x + (amount-i) * old_x) / amount in
         let y = (i * new_y + (amount-i) * old_y) / amount in
-        pretty_ball x y color radius !ball_res;
-        sleep 20;
+        let p = Rules.closest_inside (position_of_coord x y) in
+        let (xc, yc) = coord_of_position p in
         hide x y;
+        G.set_color G.black;
+        G.moveto (xc - size/2) (yc - size/2);
+        G.lineto (xc - size/2) (yc + size/2);
+        G.lineto (xc + size/2) (yc + size/2);
+        G.lineto (xc + size/2) (yc - size/2);
+        G.lineto (xc - size/2) (yc - size/2);
+        pretty_ball x y color radius !ball_res;
+        sleep 4000;
     done;
     if Rules.is_inside new_pos then pretty_ball new_x new_y color radius !ball_res
     else hide new_x new_y
@@ -155,11 +172,6 @@ let draw_game game =
     List.iter (fun b ->
         draw_ball b (Rules.position_of_ball game b)
         ) (Rules.get_balls game)
-
-let position_of_coord x y =
-    let size = !cell_size in
-    let x', y' = x - padding_left, y - padding_down in
-    Position.of_int (x'/size) (y'/size)
 
 let draw_menu l =
     G.clear_graph ();
