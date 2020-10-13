@@ -61,12 +61,13 @@ let rec get_ball game =
     (* extended to allow user to select either a ball or a key *)
     let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
     if status.G.keypressed = true then begin
-        if Char.chr (Char.code status.G.key) = k_quit_game then Abort
-        else if Char.chr (Char.code status.G.key) = k_mv_undo then Undo
-        else if Char.chr (Char.code status.G.key) = k_mv_redo then Redo
-        else if Char.chr (Char.code status.G.key) = k_solve then Solve
-        else if Char.chr (Char.code status.G.key) = k_write then Write
-        else if Char.chr (Char.code status.G.key) = k_fail then failwith "Program terminated on keypress"
+        let k = Char.chr (Char.code status.G.key) in
+        if k = k_quit_game then Abort
+        else if k = k_mv_undo then Undo
+        else if k = k_mv_redo then Redo
+        else if k = k_solve then Solve
+        else if k = k_write then Write
+        else if k = k_fail then failwith "Program terminated on keypress"
         else get_ball game (* not a valid key, keep waiting *)
     end else begin
         (* check if a ball was selected *)
@@ -203,7 +204,7 @@ and loop game =
                     * ensuring that Stay will never be converted into a Position.t *)
                     let (g, update) = Rules.apply_move !game user in
                     game := g;
-                    List.iter (D.animate_ball 20) update;
+                    List.iter (D.animate_ball 10) update;
                 ) else D.draw_game !game
             | Abort -> stay := false;
             (* get_next_move will convert Ball -> Move, Ball will never pass through *)
@@ -211,12 +212,12 @@ and loop game =
             | Undo -> (
                 let (g, update) = Rules.undo_move !game in
                 game := g;
-                List.iter (D.animate_ball 20) update
+                List.iter (D.animate_ball 5) update
                 )
             | Redo -> (
                 let (g, update) = Rules.redo_move !game in
                 game := g;
-                List.iter (D.animate_ball 20) update
+                List.iter (D.animate_ball 5) update
                 )
             | Solve -> solver !game
             | Write -> (
