@@ -90,6 +90,18 @@ let get_key_pressed k =
     let key = Char.code status.G.key in
     k (Char.chr key)
 
+(* Sometimes when we hold down a key the program becomes unresponsive
+ * because it has to deal with all the queued keypresses.
+ * This procedure solves this method by emptying the queue *)
+let clear_event_queue () =
+    while (
+        let status = G.wait_next_event [G.Key_pressed; G.Poll] in (* Nonblocking, but does not dequeue *)
+        if status.G.keypressed then ( (* Dequeues, but blocking if no event is waiting *)
+            let _ = G.wait_next_event [G.Key_pressed] in
+            true (* keep looping *)
+        ) else false
+    ) do () done
+
 (* return the direction choosen by the player *)
 let rec get_ball_direction () =
     let dir_of_char c =
@@ -143,7 +155,7 @@ let create_game () =
     let ball_count = ref 0 in
     let rec add_balls l =
         let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
-        if status.G.keypressed = true && Char.chr (Char.code status.G.key) = k_launch then
+        if status.G.keypressed && Char.chr (Char.code status.G.key) = k_launch then
             begin Draw.ready true; l end
         else
             (* add a ball *)
@@ -151,7 +163,7 @@ let create_game () =
             let p = D.position_of_coord x y in
             let (x',y') = Position.proj_x p, Position.proj_y p in
             (* balls can not be outside the grid *)
-            if Rules.is_inside (Position.of_int x' y') then
+            if Rules.is_inside (Position.of_ints x' y') then
                 (* we don't have to check right now that the position is available because
                  * game will manage it *)
                 let ball = Rules.make_ball !ball_count in
@@ -196,6 +208,7 @@ and loop game =
             message := !message ^ msg_solve ^ msg_write ^ msg_forcequit;
             D.draw_string !message;
         (* get user action *)
+        clear_event_queue ();
         let user = get_next_move !game in
         match user with
             | Move user ->
@@ -233,17 +246,10 @@ and solver game  =
     D.ball_quality ball_lowres;
     D.draw_game game;
     let solver = Solver.solve game in
-    let continue = ref true in
-    let pause = ref 8192 in
-    while !continue && Solver.step solver = None do
+    while Solver.step solver = None && not (G.wait_next_event [G.Key_pressed; G.Poll]).keypressed do
         let _ = sleep 5 in
         (* D.draw_game (Solver.game solver); *)
-        D.draw_string (sprintf "Exploring %dth step" (Solver.count solver));
-        if Solver.count solver = !pause then (
-            pause := 2 * !pause;
-            D.draw_string (sprintf "Exploring %dth step, still no solution. Continue ? (y/n)" (Solver.count solver));
-            get_key_pressed (fun c -> if c = 'n' then continue := false)
-        )
+        D.draw_string (sprintf "Exploring %dth step. [cancel = any]" (Solver.count solver));
     done;
     if not (Solver.is_solved solver) then Solver.leave solver;
     let game = Solver.game solver in
