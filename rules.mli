@@ -80,3 +80,6 @@ val clear_fwd : game -> unit
 
 (** is the position inside the grid ? *)
 val is_inside : Position.t -> bool
+
+(** determine which position inside the grid is closest to this one *)
+val closest_inside : Position.t -> Position.t

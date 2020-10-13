@@ -89,6 +89,13 @@ let is_inside p =
     and y = Position.proj_y p in
     0 <= x && x < max_x && 0 <= y && y < max_y
 
+let closest_inside p =
+    let x = Position.proj_x p
+    and y = Position.proj_y p in
+    let x = min (max_x - 1) (max 0 x)
+    and y = min (max_y - 1) (max 0 y) in
+    Position.of_int x y
+
 let unpack (mv:displacement) =
     (mv.id, mv.old_pos, mv.new_pos)
 
