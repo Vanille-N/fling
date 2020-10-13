@@ -12,4 +12,8 @@ reset:
 
 compress:
 	tar czf NEVEN_VILLANI-Fling.tar.gz --transform 's,^,NEVEN_VILLANI-Fling/,' \
-		Makefile *.ml *.mli *.md .chctrls .data
+		Makefile *.ml *.mli *.md .chctrls .data fling.odocl
+
+doc:
+	ocamlbuild fling.docdir/index.html
+	xdg-open fling.docdir/index.html &
