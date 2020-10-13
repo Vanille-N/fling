@@ -1,3 +1,5 @@
+(** Wrappers around the Graphics module *)
+
 (** [init_window ()] is called to initialize the window *)
 val init_window : unit -> unit
 

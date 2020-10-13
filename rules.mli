@@ -1,5 +1,6 @@
-type direction = Up | Right | Down | Left | Stay
+(** Game rules : interface types, logic, some utilities *)
 
+type direction = Up | Right | Down | Left | Stay
 
 type ball
 
@@ -7,79 +8,105 @@ type move
 
 type game
 
-(** export grid dimensions *)
+(** Grid width *)
 val max_x: int
+
+(** Grid height *)
 val max_y: int
 
-(** [make_ball id pos] returns a new ball idendified as [id] at position [pos] *)
+(** Initialize a new ball
+@return a new ball identified by its id *)
 val make_ball : int -> ball
 
-(** [new_game ball_list] returns a new game form a list of balls [ball_list] *)
+(** Initialize a new game from balls and their positions
+@return the newly created game *)
 val new_game : (ball * Position.t) list -> game
 
-(** [eq_ball ball ball'] returns true if and only if ball and ball' are equals
-    indenpendetly from their position since balls can move *)
+(** Compare balls
+@return [true] iff the balls are equal independently of their position *)
 val eq_ball : ball -> ball -> bool
 
-(** [make_move b d] returns a new move from a ball [b] and a direction [d] *)
+(** Create a user move
+@return a new move applied to a given ball, in a given direction *)
 val make_move : ball -> direction -> move
 
-(** [apply_move game move] returns a new game where [move] has been applied to [game] *)
+(** Update game after user move
+@return a game where the move has been applied as well as the list of all updates made *)
 val apply_move : game -> move -> game * (ball * Position.t * Position.t) list
 
-(** [undo_move game] rolls back the last move. Repeatable. *)
+(** Update game after undo
+@return a game where the last move has been rolled back and a list of updates *)
 val undo_move : game -> game * (ball * Position.t * Position.t) list
 
-(** [redo_move game] re-applies the last undone move. Repeatable *)
+(** Update game after redo
+@return a game where the last undo has been re-applied and a list of updates *)
 val redo_move : game -> game * (ball * Position.t * Position.t) list
 
-(** [moves game] returns all the valid moves possible for [game] *)
+(** List allowed moves
+@return a list of valid moves for the current game *)
 val moves : game -> move list
 
-(** [moves_ball game ball] returns all the valid moves for [game] that involve [ball] *)
+(** List allowed moves with a ball
+@return a list of valid moves starting with the given ball *)
 val moves_ball : game -> ball -> move list
 
-(** [get_balls game] returns the current list of ball on the [game] *)
+(** List balls
+@return all balls still on the board *)
 val get_balls : game -> ball list
 
-(** [is_ball pos] returns true if and only if their is a ball on the position [pos] *)
+(** Probe for balls
+@return [true] iff the given game has a ball at the given position *)
 val is_ball : game -> Position.t -> bool
 
-(** [ball_of_position game pos] returns the ball that is on the position [pos]. Fail if there is none *)
+(** Extract ball
+@return the ball that is on the given position
+@raise Not_found if there is none *)
 val ball_of_position : game -> Position.t -> ball
 
-(** [position_of_ball ball] returns the position of the ball [ball] *)
+(** Locate a ball
+@return the position of the ball
+@raise Not_found if ball does not exist *)
 val position_of_ball : game -> ball -> Position.t
 
-(** [game] is not immutable, we need a way to deep copy it *)
+(** Create independent clone of the board
+@return a fresh game *)
 val deep_copy : game -> game
 
-(** useful to display the allowed directions *)
+(** Extract a move's internals
+@return the direction of the move *)
 val direction_of_move : move -> direction
 
-(** is there a previous move ? *)
+(** Look for moves to undo
+@return [true] iff some move can be undone *)
 val has_undo : game -> bool
 
-(** is there a next move ? *)
+(** Look for moves to redo
+@return [true] iff some move can be redone *)
 val has_redo : game -> bool
 
-(** did we win ? *)
+(** Win
+@return [true] iff the user has won *)
 val is_win : game -> bool
 
-(** is the game over ? *)
+(** End of game
+@return [true] iff no move can be played *)
 val is_blocked : game -> bool
 
-(** write game to channel. First input specifies the format to use *)
+(** Save to file
+@return success or failure information *)
 val write_game : string -> game -> (unit, string) result
 
-(** load game from file *)
+(** Load from file
+@return game or failure information *)
 val load_game : string -> (Position.t list, string) result
 
-(** forget about all moves that were undone *)
-val clear_fwd : game -> unit
+(** Forget redo *)
+val clear_redo : game -> unit
 
-(** is the position inside the grid ? *)
+(** Check validity of position
+@return [true] iff the position is valid *)
 val is_inside : Position.t -> bool
 
-(** determine which position inside the grid is closest to this one *)
+(** Make position valid
+@return position adjusted to be in bounds *)
 val closest_inside : Position.t -> Position.t
