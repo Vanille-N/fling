@@ -16,6 +16,10 @@ let ball_quality n = ball_res := n
 let max_x = 15
 let max_y = 15
 
+(* some colors *)
+let red = G.rgb 255 0 0
+let gray = G.rgb 128 128 128
+
 let sleep n =
     let i = ref 0 in
     for j = 0 to n do
@@ -176,8 +180,13 @@ let text_feedback txt info =
     G.clear_graph ();
     let (x, y) = (width/3, ref (3*height/4)) in
     G.moveto x !y;
-    G.set_color G.red;
-    G.draw_string (if txt <> "" then txt else "Enter text");
+    if txt <> "" then (
+        G.set_color red;
+        G.draw_string txt
+    ) else (
+        G.set_color gray;
+        G.draw_string "Enter text"
+    );
     y := !y - 7;
     G.moveto (x-10) !y;
     G.set_color G.black;
