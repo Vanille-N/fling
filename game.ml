@@ -2,10 +2,11 @@ module G = Graphics
 module D = Draw
 open Printf
 
-let rec sleep = function
-    | 0 -> 0
-    | 1 -> 1
-    | n -> (sleep (n-1)) + (sleep (n-2))
+let sleep n =
+    let i = ref 0 in
+    for j = 0 to n do
+        i := Random.int 1024;
+    done
 
 type action =
     | Move of Rules.move
@@ -154,7 +155,7 @@ let create_game () =
     D.draw_string msg_init_game;
     let ball_count = ref 0 in
     let rec add_balls l =
-        let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
+        let status = G.wait_next_event [G.Button_down; G.Key_pressed] in
         if status.G.keypressed && Char.chr (Char.code status.G.key) = k_launch then
             begin Draw.ready true; l end
         else
@@ -247,7 +248,7 @@ and solver game  =
     D.draw_game game;
     let solver = Solver.solve game in
     while Solver.step solver = None && not (G.wait_next_event [G.Key_pressed; G.Poll]).keypressed do
-        let _ = sleep 5 in
+        sleep 10;
         (* D.draw_game (Solver.game solver); *)
         D.draw_string (sprintf "Exploring %dth step. [cancel = any]" (Solver.count solver));
     done;
