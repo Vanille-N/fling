@@ -66,9 +66,11 @@ Drawbacks:
 Altogether, performance of `is_ball` and `ball_of_position` was the main deciding factor.
 Other options have been considered (and rejected):
 - `type game = ball list` has poor `ball_of_position` efficiency and it is hard to list all balls on a line/column
+- `type game = { by_line: ball list array; by_column: ball list array; }` solves the "list all balls on a line/column" problem, but is even harder and costly to update than both previous options
 - `type game = ball option array array` makes it extremely costly to list all balls, unless paired with a `ball -> Position.t` lookup table, which basically brings us back to the `Hashtbl` option
 
-#### Displacement, undo, redo
+#### 1.b. Displacement, undo, redo
+[^Up](#fling)
 
 ```ocaml
 type displacement = {
@@ -78,8 +80,8 @@ type displacement = {
 }
 
 type game = {
-    mutable hist: displacement list; (* history of all previous moves *)
-    mutable fwd: displacement list; (* history of undone moves *)
+    mutable hist: displacement list list; (* history of all previous moves *)
+    mutable fwd: displacement list list; (* history of undone moves *)
     (* other fields irrelevant *)
 }
 ```
