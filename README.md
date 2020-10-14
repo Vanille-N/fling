@@ -133,3 +133,12 @@ In short:
 - more keyboard controls were added and help messages are shown;
 - I had fun with the `ball` graphics;
 - you can play by your preferred game variant.
+
+## 4. Thoughts
+[^Up](#fling)
+
+There are only three things I am mildly dissatisfied with, not necessarily in direct relation to this project in particular, rather to it being my first sizeable project in OCaml:
+
+- Some aspects of the code are rightfully functionnal -- the game loop/main menu which make good use of tail call optimization; most utilities in `rules.ml`; `create_game` -- but seamless integration with the graphical interface led to some amount of code that I wouldn't have written much differently in any imperative language.
+Notable examples are `get_filename` and `solver`.
+Some of this is also due to the choice of `Hashtbl`s for `game`, which being mutable inevitably led to an imperative-style `apply_move`, in which there are more `:=` and `<-` than `|>`.
