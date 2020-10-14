@@ -4,7 +4,19 @@
 
 Implementation of the "Fling" puzzle game
 
-## Build and launch
+## Outline
+
+[0. Build targets](#0-build-targets)
+[1. Major design choices](#1-major-design-choices)
+- [1.a. Dematerialized balls](#1a-dematerialized-balls)
+- [1.b. Displacement, undo, redo](#1b-displacement-undo-redo)
+- [1.c. Asynchronous game solver](#1c-asynchronous-game-solver)
+
+[2. Some additions](#2-some-additions)
+
+[3. TLDR](#3-tldr)
+
+[4. Thoughts](#4-thoughts)
 
 Requires `ocamlbuild`
 
