@@ -92,17 +92,18 @@ All `displacement`s are stored in `game` in groups triggered by the same user mo
 
 To undo a move, we simply take the top element from the `game.hist` stack. All `displacement`s obtained in this manner are rolled back in turn then added to the top of `fwd` in order to allow redoing a move symetrically.
 
-#### Asynchronous game solver
+#### 1.c. Asynchronous game solver
+[^Up](#fling)
 
 Although this one has little impact on the rest of the project, it is the most radical change in terms of difference between the function signature provided in the project skeleton and the actual implementation.
 
-`solve` doesn't actually solve the game ! At least not in a synchronous fashion.
+`solve` doesn't actually solve the game ! At least not in a synchronous manner.
 
 Instead it returns an object that "knows" how to solve it, whenever needed.
 
-Each call to `step` will advance the computation by one move (`apply_move` if new moves are available or `undo_move` if a dead-end was reached). This allows showing progress of the computation: the game board is updated and drawn after each attempt at a move. The user may also see the number of explored paths in real time in the text section.
+Each call to `step` will advance the computation by one move (`apply_move` if new moves are available or `undo_move` if a dead-end was reached). This allows showing progress of the computation: the game board is updated and drawn after each attempt at a move. Speed may be adjusted so that the user can see the attempts being made. The user may also see the number of explored paths in real time in the text section.
 
-One notable advantage is the possibility of implementing an "abort solution search" functionality, that would be virtually impossible to implement cleanly were `solve` blocking all computation until a solution was found.
+One notable advantage is the possibility of implementing an "abort solution search on keypress" functionality, that would be virtually impossible to implement cleanly were `solve` blocking all computation until a solution was found.
 
 The combination of this behavior with `undo_move`/`redo_move` allows for presenting the solution to the user. Instead of simply being told that "the solution exists", the user is put in control of a game state where a sequence of moves leading to the solution has been memorized in the `fwd` field of `game`. Pressing the keys associated with undo/redo allows for exploring the solution.
 
