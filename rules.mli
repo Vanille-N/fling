@@ -1,4 +1,4 @@
-(** Game rules : interface types, logic, some utilities *)
+(** Game rules: interface types, logic, some utilities *)
 
 type direction = Up | Right | Down | Left | Stay
 
