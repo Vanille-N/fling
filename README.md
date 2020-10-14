@@ -18,17 +18,27 @@ Implementation of the "Fling" puzzle game
 
 [4. Thoughts](#4-thoughts)
 
+## 0. Build targets
+[^Up](#fling)
+
 Requires `ocamlbuild`
 
-```
-$ make && ./fling
-```
-Then follow instructions.
+To build: `$ make`, then follow instructions to set game controls.
 
-## Major design choices
+To build and run: `$ make run`, then follow instructions to set game controls and play
+
+To generate documentation: `$ make doc`, directory is `fling.docdir`
+
+To compress: `$ make tar`
+
+To clean build artifacts: `$ make clean`
+
+## 1. Major design choices
+[^Up](#fling)
 By decreasing importance
 
-#### Dematerialized balls
+#### 1.a. Dematerialized balls
+[^Up](#fling)
 
 The decicion most impactful to the rest of the project was the choice to make `game` store information on the balls only in a dematerialized manner. There is no actual `ball` used by `game`, `ball` only serves for interfacing with `game.ml`. Moreover, a `ball` carries no information on its position, and it only has a position relative to a `game`.
 
@@ -45,18 +55,17 @@ Instead of being a `ball list`, `game` is basically a `(Position.t, int) Hashtbl
 Advantages:
 - `is_ball` is a simple O(1) hashtable lookup;
 - so is `ball_of_position`;
-- alternating between iterations on balls and positions as done in moves is straightforward as well;
+- alternating between iterations on balls and positions as done in `moves` is straightforward as well;
 - although `get_balls` is not as immediate as if `game` were a `ball list`, it remains easy.
 
 Drawbacks:
 - `game`s cannot be thoughtlessy moved around: deep copies may be costly and shallow copies may lead to unexpected side effects;
 - the `game` must be passed down to function calls, since a `ball` on its own is not enough to know its position;
-- every new information requires updating two hashtables, failure to update one of them may lead to bugs that are extremely hard to identify. I have done my best not to separate related updates: calls to any of `Hashtbl.add`, `Hashtbl.remove`, `Hashtbl.update` are grouped together on consecutive lines.
+- every new movement requires updating two hashtables, failure to update one of them may lead to bugs that are extremely hard to identify. I have done my best not to separate related updates: calls to any of `Hashtbl.add`, `Hashtbl.remove`, `Hashtbl.update` are grouped together on consecutive lines.
 
 Altogether, performance of `is_ball` and `ball_of_position` was the main deciding factor.
 Other options have been considered (and rejected):
 - `type game = ball list` has poor `ball_of_position` efficiency and it is hard to list all balls on a line/column
-- `type game = { by_line: ball list; by_column: ball list; }` solves the "list all balls on a line/column" problem, but is even harder and costly to update than both previous options
 - `type game = ball option array array` makes it extremely costly to list all balls, unless paired with a `ball -> Position.t` lookup table, which basically brings us back to the `Hashtbl` option
 
 #### Displacement, undo, redo
