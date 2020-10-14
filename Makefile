@@ -5,9 +5,6 @@ all:
 
 clean:
 	ocamlbuild -clean
-
-reset:
-	ocamlbuild -clean
 	rm .ctrlset &>/dev/null
 
 tar:
