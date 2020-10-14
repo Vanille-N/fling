@@ -107,9 +107,29 @@ One notable advantage is the possibility of implementing an "abort solution sear
 
 The combination of this behavior with `undo_move`/`redo_move` allows for presenting the solution to the user. Instead of simply being told that "the solution exists", the user is put in control of a game state where a sequence of moves leading to the solution has been memorized in the `fwd` field of `game`. Pressing the keys associated with undo/redo allows for exploring the solution.
 
-## Some additions
+## 2. Some additions
+[^Up](#fling)
 By decreasing complexity
 
+#### Movement animations, efficient redraw
+#### Event synchronization
+#### Load/Save menu
 #### Game controls and help messages
-#### Prettier display for balls, animations
-#### Optional rule
+#### Prettify balls display
+#### Optional rule for adjacent balls
+
+## 3. TLDR
+[^Up](#fling)
+
+In short:
+- `game` is a pair of `Hashtbl`s, which allows for efficient lookup;
+- `ball` holds no information and is only usable relative to a `game`;
+- `game` stores information on which moves to undo/redo if wanted;
+- `solve` is asynchronous to enable real-time feedback;
+- the solving process was integrated with the main game;
+- animations were a pain do deal with;
+- so were keyboard events;
+- I did my best so that load/save would be ergonomic;
+- more keyboard controls were added and help messages are shown;
+- I had fun with the `ball` graphics;
+- you can play by your preferred game variant.
