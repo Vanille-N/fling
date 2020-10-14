@@ -142,3 +142,8 @@ There are only three things I am mildly dissatisfied with, not necessarily in di
 - Some aspects of the code are rightfully functionnal -- the game loop/main menu which make good use of tail call optimization; most utilities in `rules.ml`; `create_game` -- but seamless integration with the graphical interface led to some amount of code that I wouldn't have written much differently in any imperative language.
 Notable examples are `get_filename` and `solver`.
 Some of this is also due to the choice of `Hashtbl`s for `game`, which being mutable inevitably led to an imperative-style `apply_move`, in which there are more `:=` and `<-` than `|>`.
+
+- I feel like both `game.ml` and `rules.ml` have become too big and I would have liked to split them into submodules or take out some utilities, but I was sometimes restricted by OCaml's inability to handle cyclic dependencies and by the dilemma of keeping the type internals private.
+Here's a concrete example: I would have liked to extract `get_filename`, `write_game`, `load_game`, `write_file`, `load_file` into a single module dedicated to file IO. Unfortunately `load_game` and `write_game` must know of the `game` internals, and `get_filename` has to be able to call functions from `draw.ml`, which the level of `rules.ml` doesn't allow.
+`load_file` and `write_file` must also know of `loop` and `main`. Since `game.ml` is the highest module in the dependency tree, it is hard to do without splitting these related functions between multiple files.
+Workarounds can be found, like passing continuation functions as parameters, but it quickly becomes overdone. Putting each function where it has the visibility it needs does not make for a satisfying structure, but it is the easiest way.
