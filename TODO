@@ -13,15 +13,16 @@ when solving, draw lower resolution balls
 pause exploration after time
 implement solver
 load/save file
+enable stopping exploration
+clear queued events
+hist + fwd are displacement list list
+smooth ball movement
+redraw grid
+add doc-related files to make compress
 
 (GOOD)
 factorize apply move
 clean the code
-smooth ball movement
-redraw grid
-hist + fwd are displacement list list
-add doc-related files to make compress
-clear queued events
 
 (TODO)
 automatic game generation
@@ -29,3 +30,5 @@ refactor undo_move/redo_move + pop_hist/pop_fwd ?
 refactor character input in game::get_ball
 criterion to trim the tree
 update doc
+dedicated IOFile module ?
+remove ball in init phase
