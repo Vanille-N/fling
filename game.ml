@@ -63,13 +63,16 @@ let rec get_ball game =
     let status = G.wait_next_event [G.Button_down;G.Key_pressed] in
     if status.G.keypressed = true then (
         let k = Char.chr (Char.code status.G.key) in
-        if k = k_quit_game then Abort
-        else if k = k_mv_undo then Undo
-        else if k = k_mv_redo then Redo
-        else if k = k_solve then Solve
-        else if k = k_write then Write
-        else if k = k_fail then failwith "Program terminated on keypress"
-        else get_ball game (* not a valid key, keep waiting *)
+        if k = k_fail then failwith "Program terminated on keypress"
+        else match List.assoc_opt k [
+            (k_quit_game, Abort);
+            (k_mv_undo, Undo);
+            (k_mv_redo, Redo);
+            (k_write, Write);
+            (k_solve, Solve);
+        ] with
+            | None -> get_ball game
+            | Some action -> action
     ) else (
         (* check if a ball was selected *)
         let (x,y) = (status.G.mouse_x,status.G.mouse_y) in
