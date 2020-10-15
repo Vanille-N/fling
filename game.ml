@@ -301,8 +301,7 @@ and load_file () =
             | Error msg -> (
                 G.clear_graph ();
                 D.draw_string msg;
-                get_key_pressed void;
-                main menu
+                get_key_pressed void
                 )
     ) else main menu
 
@@ -314,8 +313,7 @@ and write_file g =
         | Error msg -> (
             G.clear_graph ();
             D.draw_string msg;
-            get_key_pressed void;
-            main menu
+            get_key_pressed void
             )
 
 (* obtain filename from user *)
