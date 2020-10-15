@@ -24,11 +24,11 @@ add doc-related files to make compress
 factorize apply move
 clean the code
 remove ball in init phase
+update doc
 
 (TODO)
 automatic game generation
 refactor undo_move/redo_move + pop_hist/pop_fwd ?
 refactor character input in game::get_ball
 criterion to trim the tree
-update doc
 dedicated IOFile module ?
