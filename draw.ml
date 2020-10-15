@@ -1,5 +1,6 @@
 module G = Graphics
 
+(* some toplevel data *)
 let width = 700
 let height = 700
 let line_height = 25
@@ -21,12 +22,14 @@ let red = G.rgb 200 0 0
 let gray = G.rgb 128 128 128
 let blue = G.rgb 0 100 200
 
+(* to adjust the animation framerate *)
 let sleep n =
     let i = ref 0 in
     for j = 0 to n do
         i := Random.int 1024;
     done
 
+(* G.color -> int * int * int *)
 let rgb_of_color c =
     let r = c / (256 * 256) in
     let g = (c / 256) mod 256 in
@@ -69,7 +72,7 @@ let draw_grid () =
         G.moveto start_x ((G.current_y ()) + !cell_size)
     done
 
-(* make balls prettier by adding a gradient *)
+(* make balls prettier by adding a gradient for a shiny effect *)
 let pretty_ball x y color radius resolution =
     let resolution = max 1 resolution in
     (* color transformation to apply *)
@@ -81,7 +84,7 @@ let pretty_ball x y color radius resolution =
         let (r, g, b) = rgb_of_color color in
         G.rgb (profile i r) (profile i g) (profile i b)
     in
-    (* radius shrinks *)
+    (* radius shrinks as color gets lighter *)
     let radius_var i = (resolution - i) * radius / resolution in
     for i = 0 to pred resolution do
         G.set_color (lighter i);
@@ -113,6 +116,7 @@ let draw_ball ?select:(select=false) ball p =
     end else
         pretty_ball x y color radius !ball_res
 
+(* cover position with white to hide a ball *)
 let hide x y =
     let size = !cell_size in
     let radius = (size - margin) / 2  + 4 in
@@ -123,14 +127,12 @@ let hide_pos p =
     let size = !cell_size in
     let x = padding_left + Position.proj_x p * size + (size / 2) in
     let y = padding_left + Position.proj_y p * size + (size / 2) in
-    let radius = (size - margin) / 2  + 4 in
-    G.set_color G.white;
-    G.fill_circle x y radius
+    hide x y
 
-let coord_of_position p = (
-    let size = !cell_size in
-    padding_left + Position.proj_x p * size + (size / 2),
-    padding_left + Position.proj_y p * size + (size / 2)
+let coord_of_position p =
+    let size = !cell_size in (
+        padding_left + Position.proj_x p * size + (size / 2),
+        padding_left + Position.proj_y p * size + (size / 2)
     )
 
 let position_of_coord x y =
@@ -146,12 +148,14 @@ let animate_ball speed (ball, old_pos, new_pos) =
     let color = fst (List.find (fun cb -> Rules.eq_ball (snd cb) ball) !colors) in
     let amount = (abs (old_x - new_x) + abs (old_y - new_y)) * speed in
     hide old_x old_y;
+    (* each loop iteration is a new frame *)
     for i = 1 to amount do
         let x = (i * new_x + (amount-i) * old_x) / amount in
         let y = (i * new_y + (amount-i) * old_y) / amount in
         let p = Rules.closest_inside (position_of_coord x y) in
         let (xc, yc) = coord_of_position p in
         hide x y;
+        (* redraw grid below, only a single square *)
         G.set_color G.black;
         G.moveto (xc - size/2) (yc - size/2);
         G.lineto (xc - size/2) (yc + size/2);
@@ -197,6 +201,8 @@ let draw_menu l =
 
 let ready b = colors_generated := b
 
+(* graphic interface for a completion menu *)
+(* txt is displayed, then a hline, then all lines in info *)
 let text_feedback txt info =
     G.clear_graph ();
     let (x, y) = (width/3, ref (3*height/4)) in
