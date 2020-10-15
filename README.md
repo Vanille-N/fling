@@ -116,6 +116,7 @@ By decreasing complexity
 #### Load/Save menu
 #### Game controls and help messages
 #### Prettify balls display
+#### Remove ball when in game creation phase
 #### Optional rule for adjacent balls
 
 ## 3. TLDR
@@ -137,11 +138,11 @@ In short:
 ## 4. Thoughts
 [^Up](#fling)
 
-There are only three things I am mildly dissatisfied with, not necessarily in direct relation to this project in particular, rather to it being my first sizeable project in OCaml:
+There are only three things I am mildly dissatisfied with, not necessarily in direct relation to this project in particular, rather to it being my first sizeable compiled project in OCaml:
 
 - Some aspects of the code are rightfully functionnal -- the game loop/main menu which make good use of tail call optimization; most utilities in `rules.ml`; `create_game` -- but seamless integration with the graphical interface led to some amount of code that I wouldn't have written much differently in any imperative language.
 Notable examples are `get_filename` and `solver`.
-Some of this is also due to the choice of `Hashtbl`s for `game`, which being mutable inevitably led to an imperative-style `apply_move`, in which there are more `:=` and `<-` than `|>`.
+Some of this is also due to the choice of `Hashtbl`s for `game`, which being mutable inevitably led to an imperative-style `apply_move` (although the loop is recursive), in which there are more `:=` and `<-` than `|>`.
 
 - I feel like both `game.ml` and `rules.ml` have become too big and I would have liked to split them into submodules or take out some utilities, but I was sometimes restricted by OCaml's inability to handle cyclic dependencies and by the dilemma of keeping the type internals private.
 Here's a concrete example: I would have liked to extract `get_filename`, `write_game`, `load_game`, `write_file`, `load_file` into a single module dedicated to file IO. Unfortunately `load_game` and `write_game` must know of the `game` internals, and `get_filename` has to be able to call functions from `draw.ml`, which the level of `rules.ml` doesn't allow.
@@ -149,8 +150,9 @@ Here's a concrete example: I would have liked to extract `get_filename`, `write_
 Workarounds can be found, like passing continuation functions as parameters, but it quickly becomes overdone. Putting each function where it has the visibility it needs does not make for a satisfying structure, but it is the easiest way.
 
 - I don't really like OCaml's build process and error messages.
-The type checker is incredibly useful, but the absence of type indicators on function signatures makes for errors that are a few steps too late. Mismatched types in function A leads to wrong type inference in function B which leads to a type error in function C. Having to guess from the error message that the actual issue lies in A 50 lines before the line displayed on the error message is sometimes frustrating.
-To this is added the fact that the lack of clear end-of-function delimiters leads to missing parentheses causing syntax errors on the start of the next function definition. Because of this error messages are often useless.
+The type checker is certainly useful, but the absence of type indicators on function signatures makes for errors that are a few steps too late (I might try to address this issue next time by adding type hints to function arguments).
+Mismatched types in function A leads to wrong type inference in function B which leads to a type error in function C. Having to guess from the error message that the actual issue lies in A 50 lines before the line displayed on the error message is sometimes frustrating.
+To this is added the fact that the lack of clear end-of-function delimiters leads to missing parentheses causing syntax errors on the start of the next function definition. Because of this, error messages are often useless, or to be taken with a grain of salt.
 `ocamlbuild` feels hackish as well, although it is easier to deal with than `ocamlc`.
 
-On the other hand, I very much enjoyed working with the graphical interface, which is something I had never done either in OCaml or at this level with only drawing primitives. My previous experience with graphics libraries is restricted to Python's TkInter and Matplotlib and C++'s Qt, all of which have higher-level drawing APIs and more convoluted event management. Altogether I had a lot of fun implementing this project.
+That being said, I very much enjoyed working with the graphical interface, which is something I had never done either in OCaml or at this level with only drawing primitives. My previous experience with graphics libraries is restricted to Python's TkInter and Matplotlib and C++'s Qt, all of which have higher-level drawing APIs and more convoluted event management. Altogether I had a lot of fun implementing this project.
