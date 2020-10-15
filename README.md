@@ -27,7 +27,7 @@ To build: `$ make`, then follow instructions to set game controls.
 
 To build and run: `$ make run`, then follow instructions to set game controls and play
 
-To generate documentation: `$ make doc`, directory is `fling.docdir`
+To generate and open documentation in default browser: `$ make doc`, directory is `fling.docdir`
 
 To compress: `$ make tar`
 
@@ -118,6 +118,10 @@ By decreasing complexity
 #### Prettify balls display
 #### Remove ball when in game creation phase
 #### Optional rule for adjacent balls
+[^Up](#fling)
+
+The rules state that when two balls are adjacent, one may not be launched against the other. This in particular makes the full grid unsolvable.
+Since I like being able to ignore this rule, I decided to add a boolean variable at the top of `game.ml` which when true allows throwing a ball against a direct neighbor.
 
 ## 3. TLDR
 [^Up](#fling)
