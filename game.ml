@@ -351,30 +351,28 @@ and get_filename () =
         let status = G.wait_next_event [G.Key_pressed] in
         let key = status.G.key in
         let code = Char.code key in
-        if code = 13 (* enter *) then (
-            (* open file *)
-            continue := false;
-        ) else if code = 27 (* escape *) then (
-            (* cancel *)
-            display := "";
-            continue := false;
-        ) else if code = 8 (* backspace *) then (
-            (* remove one character + update compatible *)
-            truncate display;
-            cycling := [];
-            compatible := List.filter (has_substr !display) files;
-        ) else if code = 9 (* tab *) then (
-            (* cycle through all compatible names *)
-            if !cycling = [] then cycling := !compatible;
-            if !cycling <> [] then (
-                display := List.hd !cycling;
-                cycling := List.tl !cycling;
-            );
-        ) else (
-            (* add one character + update compatible *)
-            append display key;
-            cycling := [];
-            compatible := List.filter (has_substr !display) !compatible;
+        (
+            match code with
+                | 13 (* enter *) -> continue := false
+                | 27 (* escape *) ->
+                    display := "";
+                    continue := false;
+                | 8 (* backspace *) ->
+                    truncate display;
+                    cycling := [];
+                    compatible := List.filter (has_substr !display) files;
+                | 9 (* tab *) ->
+                    (* cycle through all compatible names *)
+                    if !cycling = [] then cycling := !compatible;
+                    if !cycling <> [] then (
+                        display := List.hd !cycling;
+                        cycling := List.tl !cycling;
+                    )
+                | _ ->
+                    (* add one character + update compatible *)
+                    append display key;
+                    cycling := [];
+                    compatible := List.filter (has_substr !display) !compatible;
         );
         D.text_feedback !display !compatible;
     done;
