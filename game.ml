@@ -38,7 +38,7 @@ let ball_highres = 10
 let ball_lowres = 4
 
 (* text data *)
-let msg_init_game = sprintf "Create all balls. [start '%c']" k_launch
+let msg_init_game = sprintf "Create all balls. [start '%c'] [remove 'del']" k_launch
 let msg_select_ball = sprintf "Select a ball. [exit '%c']" k_quit_game
 let msg_undo_move = sprintf " [undo '%c']" k_mv_undo
 let msg_redo_move = sprintf " [redo '%c']" k_mv_redo
@@ -156,23 +156,29 @@ let create_game () =
     let ball_count = ref 0 in
     let rec add_balls l =
         let status = G.wait_next_event [G.Button_down; G.Key_pressed] in
-        if status.G.keypressed && Char.chr (Char.code status.G.key) = k_launch then
-            begin Draw.ready true; l end
-        else
+        if status.G.keypressed && Char.chr (Char.code status.G.key) = k_launch then (
+            Draw.ready true; l
+        ) else if status.G.keypressed && Char.code status.G.key = 8 (* backspace *) then (
+            (* remove the ball(s) *)
+            let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
+            let pos = D.position_of_coord x y in
+            D.hide_pos pos;
+            add_balls (List.filter (fun (_, p) -> not (Position.eq pos p)) l)
+        ) else (
             (* add a ball *)
             let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
             let p = D.position_of_coord x y in
             let (x',y') = Position.proj_x p, Position.proj_y p in
-            (* balls can not be outside the grid *)
-            if Rules.is_inside (Position.of_ints x' y') then
+            (* balls can't be outside the grid *)
+            if Rules.is_inside (Position.of_ints x' y') then (
                 (* we don't have to check right now that the position is available because
                  * game will manage it *)
                 let ball = Rules.make_ball !ball_count in
                 incr ball_count;
                 D.draw_ball ball p;
                 add_balls ((ball, p)::l)
-            else
-                add_balls l
+            ) else add_balls l
+        )
     in
     let balls = add_balls [] in
     Rules.new_game balls
@@ -250,7 +256,7 @@ and solver game  =
     while Solver.step solver = None && not (G.wait_next_event [G.Key_pressed; G.Poll]).keypressed do
         sleep 10;
         (* D.draw_game (Solver.game solver); *)
-        D.draw_string (sprintf "Exploring %dth step. [cancel = any]" (Solver.count solver));
+        D.draw_string (sprintf "Exploring %dth step. [cancel ' ']" (Solver.count solver));
     done;
     if not (Solver.is_solved solver) then Solver.leave solver;
     let game = Solver.game solver in

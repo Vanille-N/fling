@@ -34,3 +34,6 @@ val ball_quality : int -> unit
 
 (** draw the whole animated move *)
 val animate_ball : int -> Rules.ball * Position.t * Position.t -> unit
+
+(** remove whatever is at the position *)
+val hide_pos : Position.t -> unit

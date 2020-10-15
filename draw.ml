@@ -119,6 +119,14 @@ let hide x y =
     G.set_color G.white;
     G.fill_circle x y radius
 
+let hide_pos p =
+    let size = !cell_size in
+    let x = padding_left + Position.proj_x p * size + (size / 2) in
+    let y = padding_left + Position.proj_y p * size + (size / 2) in
+    let radius = (size - margin) / 2  + 4 in
+    G.set_color G.white;
+    G.fill_circle x y radius
+
 let coord_of_position p = (
     let size = !cell_size in
     padding_left + Position.proj_x p * size + (size / 2),
