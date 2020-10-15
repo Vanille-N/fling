@@ -41,12 +41,6 @@ let deep_copy g = {
     fwd = g.fwd;
 }
 
-let hist_push g disp =
-    g.hist <- disp :: g.hist
-
-let fwd_push g disp =
-    g.fwd <- disp :: g.fwd
-
 let make_disp id old_pos new_pos =
     { id = id; old_pos = old_pos; new_pos = new_pos; }
 
@@ -67,14 +61,14 @@ let clear_redo game =
 let new_game bs =
     let balls = Hashtbl.create (max_x + max_y) in
     let grid = Hashtbl.create (max_x + max_y) in
-    (* grid.width is a first guess at how many balls there will be.
+    (* height+width is a first guess at how many balls there will be.
      * ~one per column/line is a reasonable ballpark *)
     List.iter (fun (id, pos) ->
-        if not (Hashtbl.mem grid pos) then begin
+        if not (Hashtbl.mem grid pos) then (
             Hashtbl.add balls id pos;
             Hashtbl.add grid pos id
-            end
-            ) bs;
+        )
+    ) bs;
     { balls = balls; grid = grid; hist = []; fwd = []; }
 
 let eq_ball b b' =
@@ -99,10 +93,12 @@ let closest_inside p =
 let unpack (mv:displacement) =
     (mv.id, mv.old_pos, mv.new_pos)
 
+(* change a displacement into its opposite *)
 let disp_rev (id, old_pos, new_pos) = (id, new_pos, old_pos)
 
-(* each iteration of [apply_move] calculates the new position for a single ball
- * and recursively propagates the move to the 0 or 1 balls that were hit.
+(* each iteration of [aux] inside [apply_move] calculates the new position
+ * for a single ball and recursively propagates the move to the 0 or 1
+ * balls that were hit.
  * It stops when a ball goes off the edge.
  *)
 let apply_move g move =
@@ -134,8 +130,7 @@ let apply_move g move =
             let id_remove = Hashtbl.find g.grid pstart in
             Hashtbl.remove g.grid pstart;
             Hashtbl.remove g.balls id_remove;
-            (* add move to the history of g
-             * this marks the end of a move (see more in pop_hist) *)
+            (* add move to the history of g *)
             moved := (make_disp id_remove pstart !p) :: !moved;
             clear_redo g;
             g
@@ -200,7 +195,7 @@ let moves g =
     (* equivalent to Hashtbl.keys, yields all balls still in game *)
     |> fun h -> Hashtbl.fold (fun k v acc -> k :: acc) h []
     |> List.map (moves_ball g)
-    (* concatenate all. Notice x @ acc and not acc @ x for linear performance *)
+    (* concatenate all. Notice x @ acc and not acc @ x for linear rather that quadratic performance *)
     |> List.fold_left (fun acc x -> x @ acc) []
 
 let get_balls g =
@@ -218,6 +213,7 @@ let is_win g = (List.compare_length_with (get_balls g) 1) <= 0
 
 let is_blocked g = (moves g) = []
 
+(* checks filename against ^[a-zA-Z0-9_\.\-]+$ *)
 let is_valid_file str =
     let is_ok = function
         | 'a'..'z' | 'A'..'Z' | '0'..'9' | '-' | '_' | '.' -> true
