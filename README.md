@@ -46,7 +46,7 @@ The decicion most impactful to the rest of the project was the choice to make `g
 type game = {
     balls: (int, Position.t) Hashtbl.t; (* direct access id -> position *)
     grid: (Position.t, int) Hashtbl.t; (* direct access position -> id *)
-    (* other fields irrelevant *)
+    (* -- other fields irrelevant -- *)
 }
 ```
 
@@ -82,7 +82,7 @@ type displacement = {
 type game = {
     mutable hist: displacement list list; (* history of all previous moves *)
     mutable fwd: displacement list list; (* history of undone moves *)
-    (* other fields irrelevant *)
+    (* -- other fields irrelevant -- *)
 }
 ```
 
@@ -101,7 +101,7 @@ Although this one has little impact on the rest of the project, it is the most r
 
 Instead it returns an object that "knows" how to solve it, whenever needed.
 
-Each call to `step` will advance the computation by one move (`apply_move` if new moves are available or `undo_move` if a dead-end was reached). This allows showing progress of the computation: the game board is updated and drawn after each attempt at a move. Speed may be adjusted so that the user can see the attempts being made. The user may also see the number of explored paths in real time in the text section.
+Each call to `step` will advance the computation by one move (`apply_move` if new moves are available or `undo_move` if a dead-end was reached). This allows showing progress of the computation: the game board is updated and drawn after each attempt at a move. Speed may be adjusted so that the user can see the attempts being made. The user also has access to the number of explored paths in real time in the text section.
 
 One notable advantage is the possibility of implementing an "abort solution search on keypress" functionality, that would be virtually impossible to implement cleanly were `solve` blocking all computation until a solution was found.
 
