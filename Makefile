@@ -6,6 +6,7 @@ all:
 clean:
 	ocamlbuild -clean
 	rm .ctrlset &>/dev/null
+	rm *.tar.gz &>/dev/null
 
 tar:
 	tar czf NEVEN_VILLANI-Fling.tar.gz --transform 's,^,NEVEN_VILLANI-Fling/,' \

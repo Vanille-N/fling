@@ -23,6 +23,7 @@ add doc-related files to make compress
 (GOOD)
 factorize apply move
 clean the code
+remove ball in init phase
 
 (TODO)
 automatic game generation
@@ -31,4 +32,3 @@ refactor character input in game::get_ball
 criterion to trim the tree
 update doc
 dedicated IOFile module ?
-remove ball in init phase
