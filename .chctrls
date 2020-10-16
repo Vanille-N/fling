@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 # chctrls (CHange ConTRoLS)
 # Automatic game controls updater
@@ -7,19 +7,14 @@
 if test -t 1; then
     # see if it supports colors...
     ncolors=$(tput colors)
-    if test -n "$ncolors" && test $ncolors -ge 8; then
+    if test -n "$ncolors" && test "$ncolors" -ge 8; then
         bold="$(tput bold)"
-        underline="$(tput smul)"
-        standout="$(tput smso)"
         normal="$(tput sgr0)"
-        black="$(tput setaf 0)"
         red="$(tput setaf 1)"
         green="$(tput setaf 2)"
         yellow="$(tput setaf 3)"
         blue="$(tput setaf 4)"
         magenta="$(tput setaf 5)"
-        cyan="$(tput setaf 6)"
-        white="$(tput setaf 7)"
     fi
 fi
 
@@ -43,13 +38,13 @@ if [[ "$1" == "check" ]]; then
         echo ""
     fi
 else
-    cat game.ml | perl -ne 'print "$1\n" if /.*KEY ([A-Z ]+).* \*\)/' > .ctrllist
+    perl -ne 'print "$1\n" if /.*KEY ([A-Z ]+).* \*\)/' game.ml > .ctrllist
     echo ""
 
-    while read -u 4 line; do
+    while read -ru 4 line; do
         sleep 0.5
         read -p "Enter key for control ${bold}${magenta}${line}${normal} > " -rsn1 key
-        echo $key
+        echo "$key"
         if [ -n "$key" ]; then
             sed -E -i 's/(let .*=.*)'\''.*'\''(.*'"$line"'.*)/\1'\'"$key"\''\2/' game.ml
         fi
