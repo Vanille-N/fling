@@ -131,7 +131,20 @@ During the game, the text zone (upper left) displays usable keys for:
 - when no ball is selected: undo, redo (if allowed), solve, exit (to menu), write (saves the game), forcequit (kills the program)
 
 #### Prettify balls display
+[^Up](#fling)
+
+As was suggested in the handout, drawing a simple circle for a ball is visually unappealing.
+The new and improved ball drawing function draws several slightly off-center circles with a gradient to give an impression of volume.
+To not put too much burden on the drawer in the solving phase, the number of circles can be adjusted to lower the quality but improve the drawing speed.
+The original drawing function is a special case of the new one when the number of circles to draw passed as parameter is 1.
+
 #### Remove ball when in game creation phase
+[^Up](#fling)
+
+The original version of `create_game` did not allow for removing a ball.
+In the event of a misclick, one would have to exit the game creation phase, and restart from scratch.
+The ergonomics of game creation were improved by allowing the user to remove a ball when pointing at it and entering Backspace.
+
 #### Optional rule for adjacent balls
 [^Up](#fling)
 
