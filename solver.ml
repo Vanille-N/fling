@@ -20,35 +20,37 @@ let count solver = solver.count
 
 let is_solved solver = solver.found
 
-(* let has_extremal g =
+let has_extremal g =
     (* criterion: if a ball has an extremum for both its coordinates then there is no solution *)
     let (minx, miny, maxx, maxy) = (ref 100, ref 100, ref (-1), ref (-1)) in
     let (cmnx, cmny, cmxx, cmxy) = (ref 0, ref 0, ref 0, ref 0) in
+    (* record the extremal values and the number of times they appear *)
     List.iter (fun b ->
-        let p = Rules.position_of_ball b in
+        let p = Rules.position_of_ball g b in
         let x = Position.proj_x p in
         let y = Position.proj_y p in
         if x = !minx then incr cmnx;
         if x = !maxx then incr cmxx;
-        if x < !minx then (minx := x; cmnx := 0);
-        if x > !maxx then (maxx := x; cmxx := 0);
+        if x < !minx then (minx := x; cmnx := 1);
+        if x > !maxx then (maxx := x; cmxx := 1);
         if y = !miny then incr cmny;
         if y = !maxy then incr cmxy;
-        if y < !miny then (miny := y; cmny := 0);
-        if y > !maxy then (maxy := y; cmxy := 0);
+        if y < !miny then (miny := y; cmny := 1);
+        if y > !maxy then (maxy := y; cmxy := 1);
         ) (Rules.get_balls g);
+    (* check if any ball has both coordinates unique extrema *)
     let rec aux = function
-        | [] -> true
+        | [] -> false
         | b::tl -> (
-            let p = Rules.position_of_ball b in
+            let p = Rules.position_of_ball g b in
             let x = Position.proj_x p in
             let y = Position.proj_y p in
             if ((x = !maxx && !cmxx = 1) || (x = !minx && !cmnx = 1))
             && ((y = !maxy && !cmxy = 1) || (y = !miny && !cmny = 1))
-            then false
+            then true
             else aux tl
         )
-    in aux (Rules.get_balls g) *)
+    in aux (Rules.get_balls g)
 
 let is_solved solver = solver.found
 
@@ -100,9 +102,20 @@ let step solver =
             | (m::more)::tl -> (
                 (* m is a possible unexplored move *)
                 let (g, update) = Rules.apply_move solver.game m in
-                solver.game <- g;
                 List.iter (D.animate_ball 0) update;
-                solver.fork <- (Rules.moves solver.game)::more::tl;
-                None
+                if not (has_extremal g) then (
+                    flush stdout;
+                    solver.game <- g;
+                    List.iter (D.animate_ball 0) update;
+                    solver.fork <- (Rules.moves solver.game)::more::tl;
+                    None
+                ) else (
+                    flush stdout;
+                    let (g, update) = Rules.undo_move g in
+                    solver.game <- g;
+                    List.iter (D.animate_ball 0) update;
+                    solver.fork <- more::tl;
+                    None
+                )
             )
     )
