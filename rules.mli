@@ -16,7 +16,7 @@ val max_y: int
 
 (** Initialize a new ball
 @return a new ball identified by its id *)
-val make_ball : int -> ball
+val new_ball : unit -> ball
 
 (** Initialize a new game from balls and their positions
 @return the newly created game *)

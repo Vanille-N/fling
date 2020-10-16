@@ -47,7 +47,13 @@ let make_disp id old_pos new_pos =
 let max_x = 15
 let max_y = 15
 
-let make_ball id = id
+let new_ball =
+    let ball_count = ref 0 in
+    (fun () ->
+        if !ball_count > 50000 then ball_count := 0;
+        incr ball_count;
+        !ball_count
+    )
 
 let ball_of_position game p =
     Hashtbl.find game.grid p

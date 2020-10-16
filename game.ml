@@ -150,7 +150,6 @@ let create_game () =
     D.ball_quality ball_highres;
     D.draw_game (Rules.new_game []);
     D.draw_string msg_init_game;
-    let ball_count = ref 0 in
     let rec add_balls l =
         let status = G.wait_next_event [G.Button_down; G.Key_pressed] in
         if status.G.keypressed && Char.chr (Char.code status.G.key) = k_launch then (
@@ -170,8 +169,7 @@ let create_game () =
             if Rules.is_inside (Position.of_ints x' y') then (
                 (* we don't have to check right now that the position is available because
                  * game will manage duplicates *)
-                let ball = Rules.make_ball !ball_count in
-                incr ball_count;
+                let ball = Rules.new_ball () in
                 D.draw_ball ball p;
                 add_balls ((ball, p)::l)
             ) else add_balls l
@@ -247,11 +245,11 @@ and loop game =
 
 (* [solver game] solves the game if it is possible *)
 and solver game  =
-    D.ball_quality ball_lowres;
+    D.ball_quality ball_highres;
     D.draw_game game;
     let solver = Solver.solve game in
     while Solver.step solver = None && not (G.wait_next_event [G.Key_pressed; G.Poll]).keypressed do (* nonblocking keyboard check *)
-        sleep 10;
+        (* sleep 10; *)
         (* D.draw_game (Solver.game solver); *)
         D.draw_string (sprintf "Exploring %dth step. [cancel ' ']" (Solver.count solver));
     done;
@@ -282,14 +280,12 @@ and load_file () =
                 (* directly adapted from create_game *)
                 D.ready false;
                 D.draw_game (Rules.new_game []);
-                let ball_count = ref 0 in
                 let rec add_balls l pos =
                     match pos with
                         | [] -> (D.ready true; l)
                         | p::more -> (
                             flush stdout;
-                            let ball = Rules.make_ball !ball_count in
-                            incr ball_count;
+                            let ball = Rules.new_ball () in
                             D.draw_ball ball p;
                             add_balls ((ball, p)::l) more
                             )
