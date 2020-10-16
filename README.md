@@ -115,6 +115,21 @@ By decreasing complexity
 #### Event synchronization
 #### Load/Save menu
 #### Game controls and help messages
+[^Up](#fling)
+
+Since many events are keyboard-controlled, two things were made to make it easier to play the game.
+
+First, the user can choose custom controls through the command line.
+During the first build (`$ make` or `$ make run`), the user will be promted to enter controls for movement and control keys.
+The initialization process is external to OCaml, but the addition in the header of `game.ml` of constants to record the key associated to each control and the modification of some places (`create_game` and `get_ball_direction`) to use these constants instead of hardcoded keys make this behavior possible.
+
+For the record, the automatic tool is `.chctrls` and it is written in Bash, with Perl and Sed doing the heavy lifting. If for some reason you don't have access to one of these, it is possible to edit the keys manually in `game.ml`.
+
+During the game, the text zone (upper left) displays usable keys for:
+- when creating the game: start game, remove ball
+- when a ball is selected: left, right, up, down (if allowed), cancel
+- when no ball is selected: undo, redo (if allowed), solve, exit (to menu), write (saves the game), forcequit (kills the program)
+
 #### Prettify balls display
 #### Remove ball when in game creation phase
 #### Optional rule for adjacent balls
