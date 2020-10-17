@@ -38,7 +38,7 @@ let ball_highres = 10
 let ball_lowres = 4
 
 (* text data *)
-let msg_init_game = sprintf "Create all balls. [start '%c'] [remove 'del']" k_launch
+let msg_init_game = sprintf "Create all balls. [start '%c'] [remove 'Del'] [cancel 'Esc']" k_launch
 let msg_select_ball = sprintf "Select a ball. [exit '%c']" k_quit_game
 let msg_undo_move = sprintf " [undo '%c']" k_mv_undo
 let msg_redo_move = sprintf " [redo '%c']" k_mv_redo
@@ -54,8 +54,8 @@ let msg_exit = sprintf "[exit '%c']" k_quit_game
 let msg_solved = "SOLVED ! Press any key to explore solution"
 let msg_nosolve = "No solution"
 
-(* game is a reference to the initial game. *)
-let game = ref (Rules.new_game [])
+(* balls is a reference to the initial configuration of balls *)
+let balls = ref []
 
 (* return the ball that the player wants to move *)
 let rec get_ball game =
@@ -145,38 +145,39 @@ let get_next_move game =
 
 
 (* create_game allows the player to create its own game by putting balls over the grid *)
+let rec add_balls () =
+    let status = G.wait_next_event [G.Button_down; G.Key_pressed] in
+    if status.G.keypressed && Char.chr (Char.code status.G.key) = k_launch then (
+        D.ready true; ()
+    ) else if status.G.keypressed && Char.code status.G.key = 8 (* backspace *) then (
+        (* remove the ball(s) at position pos *)
+        let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
+        let pos = D.position_of_coord x y in
+        D.hide_pos pos;
+        balls := List.filter (fun (_, p) -> not (Position.eq pos p)) !balls;
+        add_balls ()
+    ) else (
+        (* add a ball *)
+        let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
+        let p = D.position_of_coord x y in
+        let (x',y') = Position.proj_x p, Position.proj_y p in
+        (* balls can't be outside the grid *)
+        if Rules.is_inside (Position.of_ints x' y') then (
+            (* we don't have to check right now that the position is available because
+            * game will manage duplicates *)
+            let ball = Rules.new_ball () in
+            D.draw_ball ball p;
+            balls := (ball, p) :: !balls;
+            add_balls ()
+        ) else add_balls ()
+    )
+
 let create_game () =
     D.ready false;
     D.ball_quality ball_highres;
-    D.draw_game (Rules.new_game []);
+    D.draw_game (Rules.new_game !balls);
     D.draw_string msg_init_game;
-    let rec add_balls l =
-        let status = G.wait_next_event [G.Button_down; G.Key_pressed] in
-        if status.G.keypressed && Char.chr (Char.code status.G.key) = k_launch then (
-            Draw.ready true; l
-        ) else if status.G.keypressed && Char.code status.G.key = 8 (* backspace *) then (
-            (* remove the ball(s) at position pos *)
-            let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
-            let pos = D.position_of_coord x y in
-            D.hide_pos pos;
-            add_balls (List.filter (fun (_, p) -> not (Position.eq pos p)) l)
-        ) else (
-            (* add a ball *)
-            let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
-            let p = D.position_of_coord x y in
-            let (x',y') = Position.proj_x p, Position.proj_y p in
-            (* balls can't be outside the grid *)
-            if Rules.is_inside (Position.of_ints x' y') then (
-                (* we don't have to check right now that the position is available because
-                 * game will manage duplicates *)
-                let ball = Rules.new_ball () in
-                D.draw_ball ball p;
-                add_balls ((ball, p)::l)
-            ) else add_balls l
-        )
-    in
-    let balls = add_balls [] in
-    Rules.new_game balls
+    add_balls ()
 
 (* A menu is a (string * (unit -> unit)) list.
  * The player chooses which function should be called *)
@@ -184,13 +185,9 @@ let rec menu = [("exit", leave);("play new", play);("load file", load_file)]
 and menu_replay = [("exit", leave);("play new", play);("load file", load_file);("replay", replay)]
 (* [play ()] allows the player to create a new game, and then try to solve it *)
 and play () =
-    game := create_game ();
-    loop (Rules.deep_copy !game)
-
-(* [solve ()] allows the player to create a new game and then see if the game can be solved *)
-and solve () =
-    game := create_game ();
-    solver (Rules.deep_copy !game)
+    balls := [];
+    create_game ();
+    loop (Rules.new_game !balls)
 
 (* [loop game] loops on the game until the player chooses to exit
  * even if there are no possible moves left, allow undoing moves to explore *)
@@ -263,10 +260,8 @@ and solver game  =
 
 (* replay the previous game *)
 and replay () =
-    loop (Rules.deep_copy !game)
-(* resolve the previous game *)
-and resolve () =
-    solver (Rules.deep_copy !game)
+    create_game ();
+    loop (Rules.new_game !balls)
 (* leave the application *)
 and leave () =
     D.close_window()
@@ -277,22 +272,15 @@ and load_file () =
     if name <> "" then (
         match Rules.load_game name with
             | Ok pos -> (
-                (* directly adapted from create_game *)
                 D.ready false;
                 D.draw_game (Rules.new_game []);
-                let rec add_balls l pos =
-                    match pos with
-                        | [] -> (D.ready true; l)
-                        | p::more -> (
-                            flush stdout;
-                            let ball = Rules.new_ball () in
-                            D.draw_ball ball p;
-                            add_balls ((ball, p)::l) more
-                            )
-                in
-                let balls = add_balls [] pos in
-                game := Rules.new_game balls;
-                loop (Rules.deep_copy !game)
+                (* draw balls from file *)
+                balls := List.map (fun p -> (Rules.new_ball (), p)) pos;
+                List.iter (fun (b, p) -> D.draw_ball b p) !balls;
+                D.draw_string msg_init_game;
+                (* allow user to add or remove balls *)
+                create_game ();
+                loop (Rules.new_game !balls)
                 )
             | Error msg -> (
                 G.clear_graph ();
