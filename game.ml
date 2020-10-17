@@ -38,7 +38,7 @@ let ball_highres = 10
 let ball_lowres = 4
 
 (* text data *)
-let msg_init_game = sprintf "Create all balls. [start '%c'] [remove 'Del'] [cancel 'Esc']" k_launch
+let msg_init_game = sprintf "Create all balls. [start '%c'] [remove 'Del']" k_launch
 let msg_select_ball = sprintf "Select a ball. [exit '%c']" k_quit_game
 let msg_undo_move = sprintf " [undo '%c']" k_mv_undo
 let msg_redo_move = sprintf " [redo '%c']" k_mv_redo
