@@ -103,14 +103,12 @@ let step solver =
                 (* m is a possible unexplored move *)
                 let (g, update) = Rules.apply_move solver.game m in
                 List.iter (D.animate_ball 0) update;
-                if not (has_extremal g) then (
-                    flush stdout;
+                if Rules.is_win g || not (has_extremal g) then (
                     solver.game <- g;
                     List.iter (D.animate_ball 0) update;
                     solver.fork <- (Rules.moves solver.game)::more::tl;
                     None
                 ) else (
-                    flush stdout;
                     let (g, update) = Rules.undo_move g in
                     solver.game <- g;
                     List.iter (D.animate_ball 0) update;
