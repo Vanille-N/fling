@@ -112,8 +112,18 @@ The combination of this behavior with `undo_move`/`redo_move` allows for present
 By decreasing complexity
 
 #### Movement animations, efficient redraw
+#### Trimming the solver's tree
 #### Event synchronization
 #### Load/Save menu
+[^Up](#fling)
+
+#### Edit replay or loaded file
+[^Up](#fling)
+
+This required a bit of change in `game.ml`'s toplevel. The global variable `game : game` was replaced with `balls : (ball, Position.t) list`. The `add_balls` function also can be run from more places.
+
+Together these changes allow editing the game that was last played or a save file. Before this the `replay` menu option started the game immediately and so did the `load file` one. Now one can load a file then modify the balls' position before playing.
+
 #### Game controls and help messages
 [^Up](#fling)
 
