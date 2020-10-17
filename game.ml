@@ -143,8 +143,7 @@ let get_next_move game =
         | Move _ -> failwith "Unreachable @game::get_next_move::Move"
         | other -> other (* pass as is *)
 
-
-(* create_game allows the player to create its own game by putting balls over the grid *)
+(* add_balls creates new balls when the user clicks on the grid *)
 let rec add_balls () =
     let status = G.wait_next_event [G.Button_down; G.Key_pressed] in
     if status.G.keypressed && Char.chr (Char.code status.G.key) = k_launch then (
@@ -172,6 +171,7 @@ let rec add_balls () =
         ) else add_balls ()
     )
 
+(* create_game allows the player to create its own game by putting balls over the grid *)
 let create_game () =
     D.ready false;
     D.ball_quality ball_highres;
