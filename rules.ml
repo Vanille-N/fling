@@ -34,13 +34,6 @@ type game = {
     mutable fwd: displacement list list; (* history of undone moves *)
 }
 
-let deep_copy g = {
-    balls = Hashtbl.copy g.balls;
-    grid = Hashtbl.copy g.grid;
-    hist = g.hist;
-    fwd = g.fwd;
-}
-
 let make_disp id old_pos new_pos =
     { id = id; old_pos = old_pos; new_pos = new_pos; }
 

@@ -68,10 +68,6 @@ val ball_of_position : game -> Position.t -> ball
 @raise Not_found if ball does not exist *)
 val position_of_ball : game -> ball -> Position.t
 
-(** Create independent clone of the board
-@return a fresh game *)
-val deep_copy : game -> game
-
 (** Extract a move's internals
 @return the direction of the move *)
 val direction_of_move : move -> direction
