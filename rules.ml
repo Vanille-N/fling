@@ -78,13 +78,11 @@ let make_move b d = { ball = b; dir = d; }
 let is_ball g p = Hashtbl.mem g.grid p
 
 let is_inside p =
-    let x = Position.proj_x p
-    and y = Position.proj_y p in
+    let (x, y) = Position.coords p in
     0 <= x && x < max_x && 0 <= y && y < max_y
 
 let closest_inside p =
-    let x = Position.proj_x p
-    and y = Position.proj_y p in
+    let (x, y) = Position.coords p in
     let x = min (max_x - 1) (max 0 x)
     and y = min (max_y - 1) (max 0 y) in
     Position.of_ints x y
@@ -232,7 +230,9 @@ let write_game name g =
         fprintf oc "Fling\nv0\nBEGIN\n";
         g.balls
         |> fun h -> Hashtbl.fold (fun id pos acc -> pos :: acc) h []
-        |> List.iter (fun p -> fprintf oc "%d %d\n" (Position.proj_x p) (Position.proj_y p));
+        |> List.iter (fun p ->
+            let (x, y) = Position.coords p in
+            fprintf oc "%d %d\n" x y);
         fprintf oc "END\n";
         close_out oc;
         Ok ()

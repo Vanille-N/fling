@@ -5,6 +5,9 @@ type t
 (** Initialize a new position *)
 val of_ints : int -> int -> t
 
+(** Split back into coordinates *)
+val coords : t -> int * int
+
 (** Extract first coordinate *)
 val proj_x : t -> int
 

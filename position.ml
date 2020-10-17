@@ -2,6 +2,8 @@ type t = int * int
 
 let of_ints x y = (x, y)
 
+let coords (x, y) = (x, y)
+
 let proj_x = fst
 
 let proj_y = snd

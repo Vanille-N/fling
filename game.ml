@@ -160,7 +160,7 @@ let rec add_balls () =
         (* add a ball *)
         let (x,y) = (status.G.mouse_x, status.G.mouse_y) in
         let p = D.position_of_coord x y in
-        let (x',y') = Position.proj_x p, Position.proj_y p in
+        let (x',y') = Position.coords p in
         (* balls can't be outside the grid *)
         if Rules.is_inside (Position.of_ints x' y') then (
             (* we don't have to check right now that the position is available because
