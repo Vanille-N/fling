@@ -50,7 +50,7 @@ By decreasing importance
 #### 1.a. Dematerialized balls
 [^Up](#fling)
 
-The decicion most impactful to the rest of the project was the choice to make `game` store information on the balls only in a dematerialized manner. There is no actual `ball` used by `game`, `ball` only serves for interfacing with `game.ml`. Moreover, a `ball` carries no information on its position, and it only has a position relative to a `game`.
+The decicion most impactful to the rest of the project was the choice to make `game` store information on the balls only in a dematerialized manner. There is no actual `ball` being used in `rules.ml`, `ball` only serves for interfacing with `game.ml` and `draw.ml`. Moreover, a `ball` carries no information on its position, and it only has a position relative to a `game`.
 
 ```ocaml
 type game = {
@@ -69,7 +69,7 @@ Advantages:
 - although `get_balls` is not as immediate as if `game` were a `ball list`, it remains easy.
 
 Drawbacks:
-- `game`s cannot be thoughtlessy moved around: deep copies may be costly and shallow copies may lead to unexpected side effects;
+- `game`s cannot be thoughtlessy moved around: deep copies may be costly and shallow copies may lead to side effects;
 - the `game` must be passed down to function calls, since a `ball` on its own is not enough to know its position;
 - every new movement requires updating two hashtables, failure to update one of them may lead to bugs that are extremely hard to identify. I have done my best not to separate related updates: calls to any of `Hashtbl.add`, `Hashtbl.remove`, `Hashtbl.update` are grouped together on consecutive lines.
 
@@ -115,7 +115,7 @@ Each call to `step` will advance the computation by one move (`apply_move` if ne
 
 One notable advantage is the possibility of implementing an "abort solution search on keypress" functionality, that would be virtually impossible to implement cleanly were `solve` blocking all computation until a solution was found.
 
-The combination of this behavior with `undo_move`/`redo_move` allows for presenting the solution to the user. Instead of simply being told that "the solution exists", the user is put in control of a game state where a sequence of moves leading to the solution has been memorized in the `fwd` field of `game`. Pressing the keys associated with undo/redo allows for exploring the solution.
+Thanks to `undo_move`/`redo_move`, the user can be put in control of a game state where a sequence of moves leading to the solution has been memorized in the `fwd` field of `game`. Pressing the keys associated with undo/redo allows for exploring the solution.
 
 ## 2. Some additions
 [^Up](#fling)
@@ -155,7 +155,7 @@ This required a bit of change in `game.ml`'s toplevel. The global variable `game
 
 Together these changes allow editing the game that was last played or a save file. Before this the `replay` menu option started the game immediately and so did the `load file` one. Now one can load a file then modify the balls' position before playing.
 
-#### Game controls and help messages
+#### 2.e. Game controls and help messages
 [^Up](#fling)
 
 Since many events are keyboard-controlled, two things were made to make it easier to play the game.
@@ -164,14 +164,14 @@ First, the user can choose custom controls through the command line.
 During the first build (`$ make` or `$ make run`), the user will be promted to enter controls for movement and control keys.
 The initialization process is external to OCaml, but the addition in the header of `game.ml` of constants to record the key associated to each control and the modification of some places (`create_game` and `get_ball_direction`) to use these constants instead of hardcoded keys make this behavior possible.
 
-For the record, the automatic tool is `.chctrls` and it is written in Bash, with Perl and Sed doing the heavy lifting. If for some reason you don't have access to one of these, it is possible to edit the keys manually in `game.ml`.
+For the record, the automatic tool is `.chctrls` and it is written in Bash, with Perl and Sed doing the heavy lifting. If for some reason you don't have access to one of these, you should edit the keys manually in `game.ml`.
 
 During the game, the text zone (upper left) displays usable keys for:
 - when creating the game: start game, remove ball
 - when a ball is selected: left, right, up, down (if allowed), cancel
 - when no ball is selected: undo, redo (if allowed), solve, exit (to menu), write (saves the game), forcequit (kills the program)
 
-#### Prettify balls display
+#### 2.f. Prettify balls display
 [^Up](#fling)
 
 As was suggested in the handout, drawing a simple circle for a ball is visually unappealing.
@@ -179,14 +179,14 @@ The new and improved ball drawing function draws several slightly off-center cir
 To not put too much burden on the drawer in the solving phase, the number of circles can be adjusted to lower the quality but improve the drawing speed.
 The original drawing function is a special case of the new one when the number of circles to draw passed as parameter is 1.
 
-#### Remove ball when in game creation phase
+#### 2.g. Remove ball when in game creation phase
 [^Up](#fling)
 
 The original version of `create_game` did not allow for removing a ball.
 In the event of a misclick, one would have to exit the game creation phase, and restart from scratch.
 The ergonomics of game creation were improved by allowing the user to remove a ball when pointing at it and entering Backspace.
 
-#### Optional rule for adjacent balls
+#### 2.i. Optional rule for adjacent balls
 [^Up](#fling)
 
 The rules state that when two balls are adjacent, one may not be launched against the other. This in particular makes the full grid unsolvable.
@@ -201,11 +201,9 @@ In short:
 - `game` stores information on which moves to undo/redo if wanted;
 - `solve` is asynchronous to enable real-time feedback;
 - the solving process was integrated with the main game;
-- animations were a pain do deal with;
-- so were keyboard events;
-- I did my best so that load/save would be ergonomic;
+- ergonomics of load/write/edit were improved;
 - more keyboard controls were added and help messages are shown;
-- I had fun with the `ball` graphics;
+- visuals (graphics and animations) were greatly improved;
 - you can play by your preferred game variant.
 
 ## 4. Thoughts
@@ -216,15 +214,17 @@ There are only three things I am mildly dissatisfied with, not necessarily in di
 - Some aspects of the code are rightfully functionnal -- the game loop/main menu which make good use of tail call optimization; most utilities in `rules.ml`; `create_game` -- but seamless integration with the graphical interface led to some amount of code that I wouldn't have written much differently in any imperative language.
 Notable examples are `get_filename` and `solver`.
 Some of this is also due to the choice of `Hashtbl`s for `game`, which being mutable inevitably led to an imperative-style `apply_move` (although the loop is recursive), in which there are more `:=` and `<-` than `|>`.
+At the same time there are some places where doing a `while` loop with a recursive function just for the sake of it didn't seem like a good idea. For example, in `loop`, there are 6 different cases, and only one of them causes the end of the loop. Having `stay := false` once rather than `aux game` five times just seemed more readable.
+In short, I used functional style whenever it seemed appropriate, but I didn't go out of my way to remove all `ref`, `for` and `while`.<br><br>
 
 - I feel like both `game.ml` and `rules.ml` have become too big and I would have liked to split them into submodules or take out some utilities, but I was sometimes restricted by OCaml's inability to handle cyclic dependencies and by the dilemma of keeping the type internals private.
 Here's a concrete example: I would have liked to extract `get_filename`, `write_game`, `load_game`, `write_file`, `load_file` into a single module dedicated to file IO. Unfortunately `load_game` and `write_game` must know of the `game` internals, and `get_filename` has to be able to call functions from `draw.ml`, which the level of `rules.ml` doesn't allow.
 `load_file` and `write_file` must also know of `loop` and `main`. Since `game.ml` is the highest module in the dependency tree, it is hard to do without splitting these related functions between multiple files.
-Workarounds can be found, like passing continuation functions as parameters, but it quickly becomes overdone. Putting each function where it has the visibility it needs does not make for a satisfying structure, but it is the easiest way.
+Workarounds can be found, like passing continuation functions as parameters, but it quickly becomes overdone. Putting each function where it has the visibility it needs does not make for a satisfying structure, but it is the easiest way.<br><br>
 
 - I don't really like OCaml's build process and error messages.
 The type checker is certainly useful, but the absence of type indicators on function signatures makes for errors that are a few steps too late (I might try to address this issue next time by adding type hints to function arguments).
-Mismatched types in function A leads to wrong type inference in function B which leads to a type error in function C. Having to guess from the error message that the actual issue lies in A 50 lines before the line displayed on the error message is sometimes frustrating.
+Mismatched types in function A leads to wrong type inference in function B which leads to a type error in function C. Having to guess from the error message that the actual issue lies in A, 50 lines before the line displayed on the error message is sometimes frustrating.
 To this is added the fact that the lack of clear end-of-function delimiters leads to missing parentheses causing syntax errors on the start of the next function definition. Because of this, error messages are often useless, or to be taken with a grain of salt.
 `ocamlbuild` feels hackish as well, although it is easier to deal with than `ocamlc`.
 
