@@ -118,6 +118,14 @@ By decreasing complexity
 [^Up](#fling)
 
 #### Edit replay or loaded file
+#### 2.c. Load/Save menu
+[^Up](#fling)
+
+The load/save menu reads keyboard input and returns the string entered by the user. As its name implies, it can be accessed either when writing a file (press on the set key when a game is running) or when loading a file (3rd menu option).
+
+Text entered by the user is displayed in real time and compared against names of files already existing in `.data/`. The menu supports deletion (Backspace) and cyclic autocompletion (Tab). When Enter is pressed, the text displayed is treated as a filename and checked against `^[a-zA-Z0-9\.\-_]+$`.
+
+#### 2.d. Edit replay or loaded file
 [^Up](#fling)
 
 This required a bit of change in `game.ml`'s toplevel. The global variable `game : game` was replaced with `balls : (ball, Position.t) list`. The `add_balls` function also can be run from more places.
