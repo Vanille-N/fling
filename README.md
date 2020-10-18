@@ -128,6 +128,19 @@ By decreasing complexity
 [^Up](#fling)
 
 #### Edit replay or loaded file
+#### 2.b. Trimming the solver's tree
+[^Up](#fling)
+
+One single criterion for eliminating configurations guaranteed to be unsolvable was implemented.
+
+It consists in checking if any ball is outside of the rectangular zone containng all other balls. One can easily see that any move will cause all balls still in game to remain inside said rectangular region. This translates to finding `b` so that `((∀b', b.x < b'.x) || (∀b', b.x > b'.x)) && ((∀b', b.y < b'.y) || (∀b', b.y > b'.y))`
+
+The efficient method for checking it is:
+- find the maximum and minimum for `x` and `y`, and how many times they appear
+- check if any ball satisfies that both of its coordinates are the maximum/minimum and if there is only one of that maximum/minimum.
+
+The whole cost is linear relative to the number of balls still in game. I don't think it improves the worst case complexity of the solver, but it has been proven to be very effective on configurations such as `no_solution_3`.
+
 #### 2.c. Load/Save menu
 [^Up](#fling)
 
