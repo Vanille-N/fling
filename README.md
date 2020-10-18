@@ -121,13 +121,13 @@ Thanks to `undo_move`/`redo_move`, the user can be put in control of a game stat
 [^Up](#fling)
 By decreasing complexity
 
-#### Movement animations, efficient redraw
-#### Trimming the solver's tree
-#### Event synchronization
-#### Load/Save menu
+#### 2.a. Movement animations, efficient redraw
 [^Up](#fling)
 
-#### Edit replay or loaded file
+One obstacle to smooth animations was the inefficiency of `draw_game`. Each call to it would redraw the whole board, which caused graphical issues.
+
+Before I could hope to have a smooth animation, I needed to tweak `draw.ml` to allow redrawing only as much as necessary: erase the ball, redraw the grid square closest to it, redraw the new ball. Nothing more. This is what each iteration of the main loop of `animate_ball` does. A small delay is introduced to adjust the speed of the balls.
+
 #### 2.b. Trimming the solver's tree
 [^Up](#fling)
 
