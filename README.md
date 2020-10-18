@@ -1,6 +1,7 @@
 # Fling
 
 [Neven Villani](https://github.com/Vanille-N), ENS Paris-Saclay
+October 2020
 
 Implementation of the "Fling" puzzle game
 
@@ -13,6 +14,15 @@ Implementation of the "Fling" puzzle game
 - [1.c. Asynchronous game solver](#1c-asynchronous-game-solver)
 
 [2. Some additions](#2-some-additions)
+- [2.a. Movement animations, efficient redraw](#2a-movement-animations-efficient-redraw)
+- [2.b. Trimming the solver's tree](#2b-trimming-the-solvers-tree)
+- [2.c. Load/Save menu](#2c-loadsave-menu)
+- [2.d. Edit replay or loaded file](#2d-edit-replay-or-loaded-file)
+- [2.e. Game controls and help messages](#2e-game-controls-and-help-messages)
+- [2.f. Prettify balls display](#2f-prettify-balls-display)
+- [2.g. Remove ball when in game creation phase](#2g-remove-ball-when-in-game-creation-phase)
+- [2.h. Event synchronization](#2h-event-synchronization)
+- [2.i. Optional rule for adjacent balls](#2i-optional-rule-for-adjacent-balls)
 
 [3. TLDR](#3-tldr)
 
