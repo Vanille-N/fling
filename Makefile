@@ -1,6 +1,6 @@
 all:
 	./.chctrls check || echo "Could not set controls"
-	ocamlbuild -use-ocamlfind -package graphics game.native
+	ocamlbuild -use-ocamlfind -package graphics,unix game.native
 	mv game.native fling
 
 clean:
