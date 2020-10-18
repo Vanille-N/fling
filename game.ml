@@ -264,7 +264,7 @@ and replay () =
     loop (Rules.new_game !balls)
 (* leave the application *)
 and leave () =
-    D.close_window()
+    D.close_window ()
 (* open previously saved file *)
 and load_file () =
     D.ball_quality ball_highres;

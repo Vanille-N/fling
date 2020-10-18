@@ -142,6 +142,7 @@ let position_of_coord x y =
 
 let animate_ball speed (ball, old_pos, new_pos) =
     let size = !cell_size in
+    let half = size / 2 in
     let (old_x, old_y) = coord_of_position old_pos in
     let (new_x, new_y) = coord_of_position new_pos in
     let radius = (size - margin) / 2 in
@@ -157,11 +158,15 @@ let animate_ball speed (ball, old_pos, new_pos) =
         hide x y;
         (* redraw grid below, only a single square *)
         G.set_color G.black;
-        G.moveto (xc - size/2) (yc - size/2);
-        G.lineto (xc - size/2) (yc + size/2);
-        G.lineto (xc + size/2) (yc + size/2);
-        G.lineto (xc + size/2) (yc - size/2);
-        G.lineto (xc - size/2) (yc - size/2);
+        let left = xc - half
+        and right = xc + half
+        and up = yc + half
+        and down = yc - half in
+        G.moveto left down;
+        G.lineto left up;
+        G.lineto right up;
+        G.lineto right down;
+        G.lineto left down;
         pretty_ball x y color radius !ball_res;
         sleep 4000;
     done;
