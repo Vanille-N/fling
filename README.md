@@ -184,7 +184,14 @@ The original drawing function is a special case of the new one when the number o
 
 The original version of `create_game` did not allow for removing a ball.
 In the event of a misclick, one would have to exit the game creation phase, and restart from scratch.
-The ergonomics of game creation were improved by allowing the user to remove a ball when pointing at it and entering Backspace.
+The ergonomics of game creation were improved by allowing the user to remove a ball when pointing at it and pressing Backspace.
+
+#### 2.h. Event synchronization
+[^Up](#fling)
+
+Once the animations were done a problem popped up: holding down a key ('undo' for example) would generate keyboard events faster than the animations would allow the game loop to react to these events. This would cause the event queue to grow in size and the game would then become unplayable for a long time until all events had been taken care of.
+
+To solve this it became necessary to empty the event queue after each executed input. Fortunately this required only minor modifications to the project skeleton.
 
 #### 2.i. Optional rule for adjacent balls
 [^Up](#fling)
