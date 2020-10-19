@@ -192,52 +192,57 @@ and play () =
 (* [loop game] loops on the game until the player chooses to exit
  * even if there are no possible moves left, allow undoing moves to explore *)
 and loop game =
-    let game = ref game in
-    let stay = ref true in (* should we keep looping ? *)
-    D.draw_game !game;
-    while !stay do
+    D.draw_game game;
+    let rec aux game =
         (* D.draw_game !game; *)
         (* display relevant help message *)
         let message = ref "" in
-            if Rules.is_win !game then message := msg_win ^ msg_exit
-            else if Rules.is_blocked !game then message := msg_lose ^ msg_exit
+            if Rules.is_win game then message := msg_win ^ msg_exit
+            else if Rules.is_blocked game then message := msg_lose ^ msg_exit
             else message := msg_select_ball;
-            if Rules.has_undo !game then message := !message ^ msg_undo_move;
-            if Rules.has_redo !game then message := !message ^ msg_redo_move;
+            if Rules.has_undo game then message := !message ^ msg_undo_move;
+            if Rules.has_redo game then message := !message ^ msg_redo_move;
             message := !message ^ msg_solve ^ msg_write ^ msg_forcequit;
             D.draw_string !message;
         (* get user action *)
         clear_event_queue ();
-        let user = get_next_move !game in
+        let user = get_next_move game in
         match user with
             | Move user ->
-                if List.mem user (Rules.moves !game) then (
+                if List.mem user (Rules.moves game) then (
                     (* { b; Stay } is never allowed regardless of b,
                     * ensuring that Stay will never be converted into a Position.t *)
-                    let (g, update) = Rules.apply_move !game user in
-                    game := g;
+                    let (game, update) = Rules.apply_move game user in
                     List.iter (D.animate_ball 10) update;
-                ) else D.draw_game !game
-            | Abort -> stay := false;
+                    aux game
+                ) else (
+                    let ball = Rules.ball_of_move user in
+                    let p = Rules.position_of_ball game ball in
+                    let update = (ball, p, p) in
+                    D.animate_ball 1 update;
+                    aux game
+                )
+            | Abort -> ()
             (* get_next_move will convert Ball -> Move, Ball will never pass through *)
             | Ball _ -> failwith "Unreachable @game::loop::while::Ball"
-            | Undo -> (
-                let (g, update) = Rules.undo_move !game in
-                game := g;
-                List.iter (D.animate_ball 5) update
-                )
-            | Redo -> (
-                let (g, update) = Rules.redo_move !game in
-                game := g;
-                List.iter (D.animate_ball 5) update
-                )
-            | Solve -> solver !game
-            | Write -> (
-                write_file !game;
-                D.draw_game !game
-                )
-    done;
-    D.draw_game !game;
+            | Undo ->
+                let (game, update) = Rules.undo_move game in
+                List.iter (D.animate_ball 5) update;
+                aux game
+            | Redo ->
+                let (game, update) = Rules.redo_move game in
+                List.iter (D.animate_ball 5) update;
+                aux game
+            | Solve ->
+                solver game;
+                aux game
+            | Write ->
+                write_file game;
+                D.draw_game game;
+                aux game
+    in
+    aux game;
+    D.draw_game game;
     main menu_replay
 
 (* [solver game] solves the game if it is possible *)
