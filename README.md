@@ -13,16 +13,17 @@ Implementation of the "Fling" puzzle game
 - [1.b. Displacement, undo, redo](#1b-displacement-undo-redo)
 - [1.c. Asynchronous game solver](#1c-asynchronous-game-solver)
 
-[2. Some additions](#2-some-additions)
+[2. Some additions and points of interest](#2-some-additions-and-points-of-interest)
 - [2.a. Movement animations, efficient redraw](#2a-movement-animations-efficient-redraw)
 - [2.b. Trimming the solver's tree](#2b-trimming-the-solvers-tree)
 - [2.c. Load/Save menu](#2c-loadsave-menu)
-- [2.d. Edit replay or loaded file](#2d-edit-replay-or-loaded-file)
-- [2.e. Game controls and help messages](#2e-game-controls-and-help-messages)
-- [2.f. Prettify balls display](#2f-prettify-balls-display)
-- [2.g. Remove ball when in game creation phase](#2g-remove-ball-when-in-game-creation-phase)
-- [2.h. Event synchronization](#2h-event-synchronization)
-- [2.i. Optional rule for adjacent balls](#2i-optional-rule-for-adjacent-balls)
+- [2.d. File format](#2d-file-format)
+- [2.e. Edit replay or loaded file](#2e-edit-replay-or-loaded-file)
+- [2.f. Game controls and help messages](#2f-game-controls-and-help-messages)
+- [2.g. Prettify balls display](#2g-prettify-balls-display)
+- [2.h. Remove ball when in game creation phase](#2h-remove-ball-when-in-game-creation-phase)
+- [2.i. Event synchronization](#2i-event-synchronization)
+- [2.j. Optional rule for adjacent balls](#2j-optional-rule-for-adjacent-balls)
 
 [3. TLDR](#3-tldr)
 
@@ -32,6 +33,9 @@ Implementation of the "Fling" puzzle game
 [^Up](#fling)
 
 Requires `ocamlbuild`
+
+Dependencies: `Graphics`, `Unix`.
+`Graphics` is not an option, `Unix` can be avoided if one (un)comments the required lines at the end of `rules.ml` (grep for 'Unix').
 
 To build: `$ make`, then follow instructions to set game controls.
 
@@ -117,7 +121,7 @@ One notable advantage is the possibility of implementing an "abort solution sear
 
 Thanks to `undo_move`/`redo_move`, the user can be put in control of a game state where a sequence of moves leading to the solution has been memorized in the `fwd` field of `game`. Pressing the keys associated with undo/redo allows for exploring the solution.
 
-## 2. Some additions
+## 2. Some additions and points of interest
 [^Up](#fling)
 By decreasing complexity
 
@@ -146,7 +150,8 @@ The whole cost is linear relative to the number of balls still in game. I don't 
 
 The load/save menu reads keyboard input and returns the string entered by the user. As its name implies, it can be accessed either when writing a file (press on the set key when a game is running) or when loading a file (3rd menu option).
 
-Text entered by the user is displayed in real time and compared against names of files already existing in `.data/`. The menu supports deletion (Backspace) and cyclic autocompletion (Tab). When Enter is pressed, the text displayed is treated as a filename and checked against `^[a-zA-Z0-9\.\-_]+$`.
+Text entered by the user is displayed in real time and compared against names of files already existing in `.data/`. The condition for a file to appear is that 1) the text must be a subsequence of that name and 2) it should not start with a `.` unless the text also does.
+The menu supports deletion (Backspace) and cyclic autocompletion (Tab). When Enter is pressed, the text displayed is treated as a filename and checked against `^[a-zA-Z0-9\.\-_]+$`.
 
 #### 2.d. Edit replay or loaded file
 [^Up](#fling)
