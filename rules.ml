@@ -99,42 +99,40 @@ let disp_rev (id, old_pos, new_pos) = (id, new_pos, old_pos)
  * It stops when a ball goes off the edge.
  *)
 let apply_move g move =
-    let moved = ref [] in
-    let rec aux g ball =
+    let rec aux g ball moved =
         (* Printf.printf "Apply move to ball %d\n" move.ball.id; *)
-        let pstart = position_of_ball g ball in
-        let p' = pos_of_dir move.dir in
-        let p = ref pstart in
-        let pnext = ref (Position.move !p p') in
-        (* find another ball or the edge *)
-        while (is_inside !p) && not (is_ball g !pnext) do
-            p := !pnext;
-            pnext := Position.move !p p';
-        done;
-        if is_inside !p then begin
+        let start = position_of_ball g ball in
+        let move = pos_of_dir move.dir in
+        let curr = start in
+        let next = (Position.move curr move) in
+        let rec find_next curr next =
+            if is_inside curr && not (is_ball g next) then
+                let curr = next in
+                let next = Position.move curr move in
+                find_next curr next
+            else (curr, next)
+        in
+        let (curr, next) = find_next curr next in
+        if is_inside curr then begin
             (* hit another ball, we have a few modifications to make *)
             let id_move = ball in
             (* update accessors *)
-            Hashtbl.replace g.balls id_move !p;
-            Hashtbl.remove g.grid pstart;
-            Hashtbl.add g.grid !p id_move;
-            (* add move to the history of g *)
-            moved := (make_disp id_move pstart !p) :: !moved;
+            Hashtbl.replace g.balls id_move curr;
+            Hashtbl.remove g.grid start;
+            Hashtbl.add g.grid curr id_move;
             (* propagate the move to the ball we hit *)
-            aux g (ball_of_position g !pnext)
+            aux g (ball_of_position g next) ((make_disp id_move start curr)::moved)
         end else begin
             (* did not hit a ball, ball goes off the edge *)
-            let id_remove = Hashtbl.find g.grid pstart in
-            Hashtbl.remove g.grid pstart;
+            let id_remove = Hashtbl.find g.grid start in
+            Hashtbl.remove g.grid start;
             Hashtbl.remove g.balls id_remove;
-            (* add move to the history of g *)
-            moved := (make_disp id_remove pstart !p) :: !moved;
             clear_redo g;
-            g
+            (g, (make_disp id_remove start curr)::moved)
         end
     in
-    let g = aux g move.ball in
-    let moved = List.rev !moved in
+    let (g, moved) = aux g move.ball [] in
+    let moved = List.rev moved in
     g.hist <- moved :: g.hist;
     (g, List.map unpack moved)
 
