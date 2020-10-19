@@ -174,7 +174,7 @@ This required a bit of change in `game.ml`'s toplevel. The global variable `game
 
 Together these changes allow editing the game that was last played or a save file. Before this the `replay` menu option started the game immediately and so did the `load file` one. Now one can load a file then modify the balls' position before playing.
 
-#### 2.e. Game controls and help messages
+#### 2.f. Game controls and help messages
 [^Up](#fling)
 
 Since many events are keyboard-controlled, two things were made to make it easier to play the game.
@@ -190,7 +190,7 @@ During the game, the text zone (upper left) displays usable keys for:
 - when a ball is selected: left, right, up, down (if allowed), cancel
 - when no ball is selected: undo, redo (if allowed), solve, exit (to menu), write (saves the game), forcequit (kills the program)
 
-#### 2.f. Prettify balls display
+#### 2.g. Prettify balls display
 [^Up](#fling)
 
 As was suggested in the handout, drawing a simple circle for a ball is visually unappealing.
@@ -198,21 +198,21 @@ The new and improved ball drawing function draws several slightly off-center cir
 To not put too much burden on the drawer in the solving phase, the number of circles can be adjusted to lower the quality but improve the drawing speed.
 The original drawing function is a special case of the new one when the number of circles to draw passed as parameter is 1.
 
-#### 2.g. Remove ball when in game creation phase
+#### 2.h. Remove ball when in game creation phase
 [^Up](#fling)
 
 The original version of `create_game` did not allow for removing a ball.
 In the event of a misclick, one would have to exit the game creation phase, and restart from scratch.
 The ergonomics of game creation were improved by allowing the user to remove a ball when pointing at it and pressing Backspace.
 
-#### 2.h. Event synchronization
+#### 2.i. Event synchronization
 [^Up](#fling)
 
 Once the animations were done a problem popped up: holding down a key ('undo' for example) would generate keyboard events faster than the animations would allow the game loop to react to these events. This would cause the event queue to grow in size and the game would then become unplayable for a long time until all events had been taken care of.
 
 To solve this it became necessary to empty the event queue after each executed input. Fortunately this required only minor modifications to the project skeleton.
 
-#### 2.i. Optional rule for adjacent balls
+#### 2.j. Optional rule for adjacent balls
 [^Up](#fling)
 
 The rules state that when two balls are adjacent, one may not be launched against the other. This in particular makes the full grid unsolvable.
@@ -237,21 +237,10 @@ In short:
 
 There are only three things I am mildly dissatisfied with, not necessarily in direct relation to this project in particular, rather to it being my first sizeable compiled project in OCaml:
 
-- Some aspects of the code are rightfully functionnal -- the game loop/main menu which make good use of tail call optimization; most utilities in `rules.ml`; `create_game` -- but seamless integration with the graphical interface led to some amount of code that I wouldn't have written much differently in any imperative language.
-Notable examples are `get_filename` and `solver`.
-Some of this is also due to the choice of `Hashtbl`s for `game`, which being mutable inevitably led to an imperative-style `apply_move` (although the loop is recursive), in which there are more `:=` and `<-` than `|>`.
-At the same time there are some places where doing a `while` loop with a recursive function just for the sake of it didn't seem like a good idea. For example, in `loop`, there are 6 different cases, and only one of them causes the end of the loop. Having `stay := false` once rather than `aux game` five times just seemed more readable.
-In short, I used functional style whenever it seemed appropriate, but I didn't go out of my way to remove all `ref`, `for` and `while`.<br><br>
+- Most of the code is written in functionnal style, but the interfaces for `game` and `solver` require a certain amount of code with side effects.
 
-- I feel like both `game.ml` and `rules.ml` have become too big and I would have liked to split them into submodules or take out some utilities, but I was sometimes restricted by OCaml's inability to handle cyclic dependencies and by the dilemma of keeping the type internals private.
-Here's a concrete example: I would have liked to extract `get_filename`, `write_game`, `load_game`, `write_file`, `load_file` into a single module dedicated to file IO. Unfortunately `load_game` and `write_game` must know of the `game` internals, and `get_filename` has to be able to call functions from `draw.ml`, which the level of `rules.ml` doesn't allow.
-`load_file` and `write_file` must also know of `loop` and `main`. Since `game.ml` is the highest module in the dependency tree, it is hard to do without splitting these related functions between multiple files.
-Workarounds can be found, like passing continuation functions as parameters, but it quickly becomes overdone. Putting each function where it has the visibility it needs does not make for a satisfying structure, but it is the easiest way.<br><br>
+- I feel like both `game.ml` and `rules.ml` have become too big and I would have liked to split them into submodules or take out some utilities, but I was sometimes restricted by OCaml's inability to handle cyclic dependencies and by the dilemma of keeping the type internals private, otherwise I would have made files of 150~200 lines, not 350~400.
 
-- I don't really like OCaml's build process and error messages.
-The type checker is certainly useful, but the absence of type indicators on function signatures makes for errors that are a few steps too late (I might try to address this issue next time by adding type hints to function arguments).
-Mismatched types in function A leads to wrong type inference in function B which leads to a type error in function C. Having to guess from the error message that the actual issue lies in A, 50 lines before the line displayed on the error message is sometimes frustrating.
-To this is added the fact that the lack of clear end-of-function delimiters leads to missing parentheses causing syntax errors on the start of the next function definition. Because of this, error messages are often useless, or to be taken with a grain of salt.
-`ocamlbuild` feels hackish as well, although it is easier to deal with than `ocamlc`.
+- I don't really like OCaml's build process and error messages. The absence of type indicators on function signatures combined with the lack of clear end-of-function delimiters leads to error messages that indicate the error line a lot later than where the actual issue is.
 
 That being said, I very much enjoyed working with the graphical interface, which is something I had never done either in OCaml or at this level with only drawing primitives. My previous experience with graphics libraries is restricted to Python's TkInter and Matplotlib and C++'s Qt, all of which have higher-level drawing APIs and more convoluted event management. Altogether I had a lot of fun implementing this project.
