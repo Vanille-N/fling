@@ -222,6 +222,15 @@ let is_valid_file str =
 
 open Printf
 let write_game name g =
+    let encode_v0 g =
+        (* as a list of coordinates *)
+        let data = g.balls
+            |> fun h -> Hashtbl.fold (fun k v acc -> v::acc) h []
+            |> List.map Position.coords
+            |> List.map (fun (x, y) -> Printf.sprintf "%d %d" x y)
+            |> String.concat "\n"
+        in "BEGIN\nv0\n" ^ data ^ "\nEND"
+    in
     if is_valid_file name then (
         let name = ".data/" ^ name in
         let oc = open_out name in
