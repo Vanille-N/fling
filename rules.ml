@@ -296,9 +296,34 @@ Neven Villani" in *)
 let load_game name =
     let name = ".data/" ^ name in
     if Sys.file_exists name then (
-        let pos = ref [] in
         let ic = open_in name in
-        let rec read b =
+        let rec read_header () =
+            (* ignore comments until "BEGIN" *)
+            try
+                let line = input_line ic in
+                if line = "BEGIN" then read_encoding ()
+                else read_header ()
+            with e -> Error "BEGIN not found"
+        and read_encoding () =
+            (* dispatch to proper decoding function *)
+            try
+                let line = input_line ic in
+                if line = "v0" then read_v0 []
+                else if line = "v1" then read_v1 0 []
+                else Error "Not a valid encoding"
+            with e -> Error "No encoding specified"
+        and read_v0 pos =
+            (* decode list of positions *)
+            try
+                let line = input_line ic in
+                if line = "END" then (close_in ic; Ok pos)
+                else (
+                    let sp = String.split_on_char ' ' line in
+                    let x = sp |> List.hd |> int_of_string in
+                    let y = sp |> List.tl |> List.hd |> int_of_string in
+                    read_v0 ((Position.of_ints x y)::pos)
+                )
+            with e -> Error "Malformed file"
             try
                 let line = input_line ic in
                 if line = "BEGIN" then read true
