@@ -19,16 +19,16 @@ hist + fwd are displacement list list
 smooth ball movement
 redraw grid
 add doc-related files to make compress
-
-(GOOD)
-factorize apply move
 clean the code
 remove ball in init phase
 update doc
+
+(GOOD)
+factorize apply move
+criterion to trim the tree
 
 (TODO)
 automatic game generation
 refactor undo_move/redo_move + pop_hist/pop_fwd ?
 refactor character input in game::get_ball
-criterion to trim the tree
 dedicated IOFile module ?
