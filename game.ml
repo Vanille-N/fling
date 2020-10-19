@@ -309,62 +309,70 @@ and write_file g =
 (* obtain filename from user *)
 and get_filename () =
     (* remove last char *)
-    let truncate sr =
-        if String.length !sr > 0 then
-            sr := String.sub !sr 0 (String.length !sr - 1)
+    let truncate str =
+        if String.length str > 0 then
+            String.sub str 0 (String.length str - 1)
+        else str
     in
     (* add one more char *)
-    let append sr c =
-        if String.length !sr < 20 then
-            sr := !sr ^ (String.make 1 c)
+    let append str c =
+        if String.length str < 20 then
+            str ^ (String.make 1 c)
+        else str
     in
-    (* test if sub is a subsequence of src. This is our filter condition *)
+    (* test if sub is a subsequence of src, also checks leading period.
+     * This is our filter condition. *)
     let has_substr sub src =
+        let str_get_opt str idx =
+            if idx >= String.length str then None
+            else Some str.[idx]
+        in
         let rec aux i j =
             if i = String.length sub then true
             else if j = String.length src then false
             else if sub.[i] = src.[j] then aux (i+1) (j+1)
             else aux i (j+1)
         in
-        aux 0 0
+        if str_get_opt sub 0 <> Some '.' && str_get_opt src 0 = Some '.' then false
+        else aux 0 0
     in
     let files = Array.to_list (Sys.readdir ".data") in
-    let display = ref "" in (* string currently visible *)
-    let continue = ref true in (* should we keep looping ? *)
-    let compatible = ref files in (* filenames compatible (in the sense of has_substr) with display *)
-    let cycling = ref [] in (* cycle through possibilities on tab *)
-    D.text_feedback "" files;
-    while !continue do
+    let display = "" in (* string currently visible *)
+    let compatible = List.filter (has_substr display) files in (* filenames compatible (in the sense of has_substr) with display *)
+    let cycling = [] in (* cycle through possibilities on tab *)
+    D.text_feedback "" compatible;
+    let rec aux display compatible cycling =
         (* get input *)
         let status = G.wait_next_event [G.Key_pressed] in
         let key = status.G.key in
         let code = Char.code key in
-        (
-            match code with
-                | 13 (* enter *) -> continue := false
-                | 27 (* escape *) ->
-                    display := "";
-                    continue := false;
-                | 8 (* backspace *) ->
-                    truncate display;
-                    cycling := [];
-                    compatible := List.filter (has_substr !display) files;
-                | 9 (* tab *) ->
-                    (* cycle through all compatible names *)
-                    if !cycling = [] then cycling := !compatible;
-                    if !cycling <> [] then (
-                        display := List.hd !cycling;
-                        cycling := List.tl !cycling;
-                    )
-                | _ ->
-                    (* add one character + update compatible *)
-                    append display key;
-                    cycling := [];
-                    compatible := List.filter (has_substr !display) !compatible;
-        );
-        D.text_feedback !display !compatible;
-    done;
-    !display
+        match code with
+            | 13 (* enter *) -> display
+            | 27 (* escape *) -> ""
+            | 8 (* backspace *) ->
+                let display = truncate display in
+                let cycling = [] in
+                let compatible = List.filter (has_substr display) files in
+                D.text_feedback display compatible;
+                aux display compatible cycling
+            | 9 (* tab *) ->
+                (* cycle through all compatible names *)
+                let cycling = if cycling = [] then compatible else cycling in
+                let (display, cycling) =
+                    if cycling <> [] then (List.hd cycling, List.tl cycling)
+                    else (display, cycling)
+                in
+                D.text_feedback display compatible;
+                aux display compatible cycling
+            | _ ->
+                (* add one character + update compatible *)
+                let display = append display key in
+                let cycling = [] in
+                let compatible = List.filter (has_substr display) files in
+                D.text_feedback display compatible;
+                aux display compatible cycling
+    in
+    aux display compatible cycling
 
 (* get the choice of the player *)
 and main l =
