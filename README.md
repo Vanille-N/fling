@@ -153,7 +153,21 @@ The load/save menu reads keyboard input and returns the string entered by the us
 Text entered by the user is displayed in real time and compared against names of files already existing in `.data/`. The condition for a file to appear is that 1) the text must be a subsequence of that name and 2) it should not start with a `.` unless the text also does.
 The menu supports deletion (Backspace) and cyclic autocompletion (Tab). When Enter is pressed, the text displayed is treated as a filename and checked against `^[a-zA-Z0-9\.\-_]+$`.
 
-#### 2.d. Edit replay or loaded file
+#### 2.d. File format
+[^Up](#fling)
+
+There are two file formats available.
+- `v0`: a list of positions `"{x} {y}\n"`
+- `v1`: a square matrix of `.` (empty) and `*` (ball)
+
+The encoder calculates both representations and chooses the shortest one in terms of line count.
+Were space efficiency a concern, I would have made the representation more compact, the goal here is to improve readability. When there are many balls, the matrix representation is better, but a list of positions is fine if there are fewer balls than lines on the grid.
+
+The decoder starts by reading the format indicator and dispatches to the corresponding decoding function.
+
+All of this wasn't really necessary. I just created my file format anticipating that I should leave room for defining several encodings or versions thereof to guarantee backwards compatibility with files already created, and I didn't want to let it go to waste.
+
+#### 2.e. Edit replay or loaded file
 [^Up](#fling)
 
 This required a bit of change in `game.ml`'s toplevel. The global variable `game : game` was replaced with `balls : (ball, Position.t) list`. The `add_balls` function also can be run from more places.
