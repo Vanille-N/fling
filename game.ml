@@ -250,11 +250,13 @@ and solver game  =
     D.ball_quality ball_highres;
     D.draw_game game;
     let solver = Solver.solve game in
-    while Solver.step solver = None && not (G.wait_next_event [G.Key_pressed; G.Poll]).keypressed do (* nonblocking keyboard check *)
-        (* sleep 10; *)
-        (* D.draw_game (Solver.game solver); *)
-        D.draw_string (sprintf "Exploring %dth step. [cancel ' ']" (Solver.count solver));
-    done;
+    let rec aux solver =
+        if Solver.step solver = None && not (G.wait_next_event [G.Key_pressed; G.Poll]).keypressed then (
+            (* nonblocking keyboard check *)
+            D.draw_string (sprintf "Exploring %dth step. [cancel ' ']" (Solver.count solver));
+            aux solver
+        ) else ()
+    in aux solver;
     if not (Solver.is_solved solver) then Solver.leave solver;
     let game = Solver.game solver in
     D.ball_quality ball_highres;
@@ -276,7 +278,7 @@ and load_file () =
     let name = get_filename () in
     if name <> "" then (
         match Rules.load_game name with
-            | Ok pos -> (
+            | Ok pos ->
                 D.ready false;
                 D.draw_game (Rules.new_game []);
                 (* draw balls from file *)
@@ -286,12 +288,11 @@ and load_file () =
                 (* allow user to add or remove balls *)
                 create_game ();
                 loop (Rules.new_game !balls)
-                )
-            | Error msg -> (
+            | Error msg ->
                 G.clear_graph ();
                 D.draw_string msg;
-                get_key_pressed void
-                )
+                get_key_pressed void;
+                main menu
     ) else main menu
 
 (* create new save file *)
