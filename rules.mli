@@ -72,6 +72,10 @@ val position_of_ball : game -> ball -> Position.t
 @return the direction of the move *)
 val direction_of_move : move -> direction
 
+(** Extract a move's internals
+@return the ball associated to the move *)
+val ball_of_move : move -> ball
+
 (** Look for moves to undo
 @return [true] iff some move can be undone *)
 val has_undo : game -> bool

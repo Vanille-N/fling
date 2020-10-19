@@ -41,6 +41,7 @@ let max_x = 15
 let max_y = 15
 
 let new_ball =
+    (* ball_count is closured to ensure no two balls have the same identifier *)
     let ball_count = ref 0 in
     (fun () ->
         if !ball_count > 50000 then ball_count := 0;
@@ -53,6 +54,8 @@ let ball_of_position game p =
 
 let position_of_ball game b =
     Hashtbl.find game.balls b
+
+let ball_of_move mv = mv.ball
 
 let clear_redo game =
     game.fwd <- []
@@ -324,24 +327,20 @@ let load_game name =
                     read_v0 ((Position.of_ints x y)::pos)
                 )
             with e -> Error "Malformed file"
+        and read_v1 y pos =
+            (* decode matrix *)
             try
                 let line = input_line ic in
-                if line = "BEGIN" then read true
-                else if line = "END" then Ok ()
+                if line = "END" then (close_in ic; Ok (List.concat pos))
                 else (
-                    if b then (
-                        let sp = String.split_on_char ' ' line in
-                        let x = sp |> List.hd |> int_of_string in
-                        let y = sp |> List.tl |> List.hd |> int_of_string in
-                        pos := (Position.of_ints x y) :: !pos;
-                    );
-                    read b
+                    let chars = List.init (String.length line) (String.get line) in
+                    let p = chars
+                        |> List.mapi (fun x c -> (x, c))
+                        |> List.filter_map (fun (x, c) -> if c = '*' then Some x else None)
+                        |> List.map (fun x -> Position.of_ints x y)
+                    in read_v1 (y+1) (p::pos)
                 )
             with e -> Error "Malformed file"
         in
-        let res = read false in
-        close_in ic;
-        match res with
-            | Ok () -> Ok !pos
-            | Error msg -> Error msg
+        read_header ()
     ) else Error "File does not exist"
