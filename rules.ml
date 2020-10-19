@@ -231,6 +231,26 @@ let write_game name g =
             |> String.concat "\n"
         in "BEGIN\nv0\n" ^ data ^ "\nEND"
     in
+    let encode_v1 g =
+        (* as a matrix *)
+        let range n =
+            let rec aux lst = function
+                | 0 -> 0::lst
+                | n -> aux (n::lst) (n-1)
+            in aux [] (n-1)
+        in
+        let data = range max_y
+            |> List.map (fun y ->
+                range max_x
+                |> List.map (fun x -> Position.of_ints x y)
+                |> List.map (is_ball g)
+                |> List.map (fun b -> if b then '*' else '.')
+                |> List.map (String.make 1)
+                |> String.concat ""
+            )
+            |> String.concat "\n"
+        in "BEGIN\nv1\n" ^ data ^ "\nEND"
+    in
     if is_valid_file name then (
         let name = ".data/" ^ name in
         let oc = open_out name in
