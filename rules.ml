@@ -220,7 +220,6 @@ let is_valid_file str =
     in
     String.length str > 0 && aux (List.init (String.length str) (String.get str))
 
-open Printf
 let write_game name g =
     let encode_v0 g =
         (* as a list of coordinates *)
@@ -251,16 +250,43 @@ let write_game name g =
             |> String.concat "\n"
         in "BEGIN\nv1\n" ^ data ^ "\nEND"
     in
+    let argmin f lst =
+        let rec aux m x = function
+            | [] -> x
+            | hd::tl when f hd < m -> aux (f hd) hd tl
+            | hd::tl -> aux m x tl
+        in
+        let x = List.hd lst in
+        aux (f x) x (List.tl lst)
+    in
     if is_valid_file name then (
         let name = ".data/" ^ name in
         let oc = open_out name in
-        fprintf oc "Fling\nv0\nBEGIN\n";
-        g.balls
-        |> fun h -> Hashtbl.fold (fun id pos acc -> pos :: acc) h []
-        |> List.iter (fun p ->
-            let (x, y) = Position.coords p in
-            fprintf oc "%d %d\n" x y);
-        fprintf oc "END\n";
+        let v0 = encode_v0 g in
+        let v1 = encode_v1 g in
+
+        (* the following requires `Unix`.
+         * If not available, comment this and uncomment the one below *)
+        (* BEGIN REQUIRES UNIX *)
+        let header = Unix.(
+            let t = gmtime (time ()) in
+            let year = t.tm_year + 1900
+            and month = t.tm_mon
+            and day = t.tm_mday
+            and hour = t.tm_hour
+            and min = t.tm_min
+            and sec = t.tm_sec in
+            Printf.sprintf "Fling -- save file
+Neven Villani
+%d/%d/%d %d:%d:%d" year month day hour min sec
+        ) in
+        (* END REQUIRES UNIX *)
+        (* BEGIN FALLBACK *)
+        (* let header = "Fling -- save file
+Neven Villani" in *)
+        (* END FALLBACK *)
+        (* choose most efficent encoding *)
+        Printf.fprintf oc "%s\n%s" header (argmin (fun s -> List.length (String.split_on_char '\n' s)) [v0; v1]);
         close_out oc;
         Ok ()
     ) else (
