@@ -8,9 +8,20 @@ clean:
 	rm .ctrlset &>/dev/null
 	rm *.tar.gz &>/dev/null
 
+ARCHIVE="NVILLANI-Fling"
+MAINDIR="VILLANI_NEVEN"
+SUBDIR="fling"
+
 tar:
-	tar czf NEVEN_VILLANI-Fling.tar.gz --transform 's,^,NEVEN_VILLANI-Fling/,' \
-		Makefile *.ml *.mli *.md .chctrls .data fling.odocl
+	rm ${ARCHIVE}.tar.gz &>/dev/null || echo ""
+	rm ${ARCHIVE}.tar &>/dev/null || echo ""
+	tar cf ${ARCHIVE}.tar \
+		--transform "s,^,${MAINDIR}/${SUBDIR}/," \
+		Makefile *.ml *.mli .chctrls .data fling.odocl
+	tar -uf ${ARCHIVE}.tar \
+		--transform "s,^,${MAINDIR}/," \
+		README.md
+	gzip ${ARCHIVE}.tar
 
 doc:
 	ocamlbuild fling.docdir/index.html
