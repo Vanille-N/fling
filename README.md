@@ -5,6 +5,8 @@ October 2020
 
 Implementation of the "Fling" puzzle game
 
+<!-- This file is best viewed in a Markdown renderer at least as complete as Github's -->
+
 ## Outline
 
 [0. Build targets](#0-build-targets)
@@ -43,7 +45,7 @@ To build and run: `$ make run`, then follow instructions to set game controls an
 
 To generate and open documentation in default browser: `$ make doc`, directory is `fling.docdir`
 
-To compress: `$ make tar`
+To compress: `$ make tar` (will fail with the modified layout if `README.md` is not in the same directory as the rest)
 
 To clean build artifacts: `$ make clean`
 
@@ -58,8 +60,8 @@ The decicion most impactful to the rest of the project was the choice to make `g
 
 ```ocaml
 type game = {
-    balls: (int, Position.t) Hashtbl.t; (* direct access id -> position *)
-    grid: (Position.t, int) Hashtbl.t; (* direct access position -> id *)
+    balls: (ball, Position.t) Hashtbl.t; (* direct access id -> position *)
+    grid: (Position.t, ball) Hashtbl.t; (* direct access position -> id *)
     (* -- other fields irrelevant -- *)
 }
 ```
@@ -79,8 +81,8 @@ Drawbacks:
 
 Altogether, performance of `is_ball` and `ball_of_position` was the main deciding factor.
 Other options have been considered (and rejected):
-- `type game = ball list` has poor `ball_of_position` efficiency and it is hard to list all balls on a line/column
-- `type game = { by_line: ball list array; by_column: ball list array; }` solves the "list all balls on a line/column" problem, but is even harder and costly to update than both previous options
+- `type game = ball list` has poor `ball_of_position` efficiency and it is harder to list all balls on a line/column
+- `type game = { by_line: ball list array; by_column: ball list array; }` solves the "list all balls on a line/column" problem, but is even more difficult to update than both previous options
 - `type game = ball option array array` makes it extremely costly to list all balls, unless paired with a `ball -> Position.t` lookup table, which basically brings us back to the `Hashtbl` option
 
 #### 1.b. Displacement, undo, redo
@@ -117,7 +119,7 @@ Instead it returns an object that "knows" how to solve it, whenever needed.
 
 Each call to `step` will advance the computation by one move (`apply_move` if new moves are available or `undo_move` if a dead-end was reached). This allows showing progress of the computation: the game board is updated and drawn after each attempt at a move. Speed may be adjusted so that the user can see the attempts being made. The user also has access to the number of explored paths in real time in the text section.
 
-One notable advantage is the possibility of implementing an "abort solution search on keypress" functionality, that would be virtually impossible to implement cleanly were `solve` blocking all computation until a solution was found.
+One notable advantage is the possibility of implementing an "abort solution search on keypress" functionality, that would be virtually impossible to implement cleanly (i.e. without blurring the line between event management and the solver logic) were `solve` blocking all computation until a solution was found.
 
 Thanks to `undo_move`/`redo_move`, the user can be put in control of a game state where a sequence of moves leading to the solution has been memorized in the `fwd` field of `game`. Pressing the keys associated with undo/redo allows for exploring the solution.
 
@@ -132,6 +134,8 @@ One obstacle to smooth animations was the inefficiency of `draw_game`. Each call
 
 Before I could hope to have a smooth animation, I needed to tweak `draw.ml` to allow redrawing only as much as necessary: erase the ball, redraw the grid square closest to it, redraw the new ball. Nothing more. This is what each iteration of the main loop of `animate_ball` does. A small delay is introduced to adjust the speed of the balls.
 
+After each movement, a list of balls to update is created. It indicates which balls are involved, what were their starting positions, and where they are now. `draw.ml` takes such list and animates each movement in turn.
+
 #### 2.b. Trimming the solver's tree
 [^Up](#fling)
 
@@ -143,7 +147,7 @@ The efficient method for checking it is:
 - find the maximum and minimum for `x` and `y`, and how many times they appear
 - check if any ball satisfies that both of its coordinates are the maximum/minimum and if there is only one of that maximum/minimum.
 
-The whole cost is linear relative to the number of balls still in game. I don't think it improves the worst case complexity of the solver, but it has been proven to be very effective on configurations such as `no_solution_3`.
+The whole process costs a linear amount of time relative to the number of balls still in game. I don't think it improves the worst case complexity of the solver, but it has been proven to be very effective on configurations such as `square-and-corner`.
 
 #### 2.c. Load/Save menu
 [^Up](#fling)
@@ -167,12 +171,14 @@ The decoder starts by reading the format indicator and dispatches to the corresp
 
 All of this wasn't really necessary. I just created my file format anticipating that I should leave room for defining several encodings or versions thereof to guarantee backwards compatibility with files already created, and I didn't want to let it go to waste.
 
+I also added a header that includes the date when the file was created. (There lies the dependency to `Unix`)
+
 #### 2.e. Edit replay or loaded file
 [^Up](#fling)
 
 This required a bit of change in `game.ml`'s toplevel. The global variable `game : game` was replaced with `balls : (ball, Position.t) list`. The `add_balls` function also can be run from more places.
 
-Together these changes allow editing the game that was last played or a save file. Before this the `replay` menu option started the game immediately and so did the `load file` one. Now one can load a file then modify the balls' position before playing.
+Together these changes allow editing the game that was last played or a save file. Before this the `replay` menu option started the game immediately and so did the `load file` one. One can now load a file then modify the balls' position before playing.
 
 #### 2.f. Game controls and help messages
 [^Up](#fling)
@@ -183,7 +189,7 @@ First, the user can choose custom controls through the command line.
 During the first build (`$ make` or `$ make run`), the user will be promted to enter controls for movement and control keys.
 The initialization process is external to OCaml, but the addition in the header of `game.ml` of constants to record the key associated to each control and the modification of some places (`create_game` and `get_ball_direction`) to use these constants instead of hardcoded keys make this behavior possible.
 
-For the record, the automatic tool is `.chctrls` and it is written in Bash, with Perl and Sed doing the heavy lifting. If for some reason you don't have access to one of these, you should edit the keys manually in `game.ml`.
+For the record, the automatic tool is `.chctrls` and it is written in Bash, with Perl and Sed doing the heavy lifting. If for some reason you don't have access to one of these, you should edit the keys manually in `game.ml`. After running it creates a marker file `.ctrlset` so that it is executed only once.
 
 During the game, the text zone (upper left) displays usable keys for:
 - when creating the game: start game, remove ball
@@ -237,9 +243,9 @@ In short:
 
 There are only three things I am mildly dissatisfied with, not necessarily in direct relation to this project in particular, rather to it being my first sizeable compiled project in OCaml:
 
-- Most of the code is written in functionnal style, but the interfaces for `game` and `solver` require a certain amount of code with side effects.
+- Most of the code is written in functionnal style, but the interfaces for `game` and `solver` require a certain amount of code with side effects due to the mutable nature of objects involved.
 
-- I feel like both `game.ml` and `rules.ml` have become too big and I would have liked to split them into submodules or take out some utilities, but I was sometimes restricted by OCaml's inability to handle cyclic dependencies and by the dilemma of keeping the type internals private, otherwise I would have made files of 150~200 lines, not 350~400.
+- I feel like both `game.ml` and `rules.ml` have become too big and I would have liked to split them into submodules or take out some utilities, but I was sometimes restricted by OCaml's inability to handle cyclic dependencies and by the dilemma of keeping the type internals private. Otherwise I would have made files of 150~200 lines, not 350~400.
 
 - I don't really like OCaml's build process and error messages. The absence of type indicators on function signatures combined with the lack of clear end-of-function delimiters leads to error messages that indicate the error line a lot later than where the actual issue is.
 

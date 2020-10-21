@@ -28,8 +28,8 @@ type move = {
 }
 
 type game = {
-    balls: (int, Position.t) Hashtbl.t; (* direct access id -> position *)
-    grid: (Position.t, int) Hashtbl.t; (* direct access position -> id *)
+    balls: (ball, Position.t) Hashtbl.t; (* direct access id -> position *)
+    grid: (Position.t, ball) Hashtbl.t; (* direct access position -> id *)
     mutable hist: displacement list list; (* history of all previous moves *)
     mutable fwd: displacement list list; (* history of undone moves *)
 }
@@ -281,7 +281,7 @@ let write_game name g =
             and sec = t.tm_sec in
             Printf.sprintf "Fling -- save file
 Neven Villani
-%d/%d/%d %d:%d:%d" year month day hour min sec
+%d/%d/%d UTC %d:%d:%d" year month day hour min sec
         ) in
         (* END REQUIRES UNIX *)
         (* BEGIN FALLBACK *)
