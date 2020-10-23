@@ -149,6 +149,8 @@ The efficient method for checking it is:
 
 The whole process costs a linear amount of time relative to the number of balls still in game. I don't think it improves the worst case complexity of the solver, but it has been proven to be very effective on configurations such as `square-and-corner`.
 
+One possible improvement would be to extend this criterion to cover the case when the balls can be divided into two groups such that the maximum y-coordinate of one group is more than the minimum y-coordinate of the other group, and the same is true of the x-coordinates.
+
 #### 2.c. Load/Save menu
 [^Up](#fling)
 
