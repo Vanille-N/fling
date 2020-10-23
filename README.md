@@ -156,8 +156,8 @@ One possible improvement would be to extend this criterion to cover the case whe
 
 The load/save menu reads keyboard input and returns the string entered by the user. As its name implies, it can be accessed either when writing a file (press on the set key when a game is running) or when loading a file (3rd menu option).
 
-Text entered by the user is displayed in real time and compared against names of files already existing in `.data/`. The condition for a file to appear is that 1) the text must be a subsequence of that name and 2) it should not start with a `.` unless the text also does.
-The menu supports deletion (Backspace) and cyclic autocompletion (Tab). When Enter is pressed, the text displayed is treated as a filename and checked against `^[a-zA-Z0-9\.\-_]+$`.
+Text entered by the user is displayed in real time and compared against names of files already existing in `.data/`. The condition for a file to appear is that 1) the text must be a (not necessarily contiguous) subsequence of that name and 2) it should not start with a `.` unless the text also does.
+The menu supports deletion (Backspace) and cyclic autocompletion (Tab). When Enter is pressed, the text displayed is treated as a filename and checked against `^[a-zA-Z0-9\.\-_]+$`. Esc allows to cancel.
 
 #### 2.d. File format
 [^Up](#fling)
@@ -173,7 +173,7 @@ The decoder starts by reading the format indicator and dispatches to the corresp
 
 All of this wasn't really necessary. I just created my file format anticipating that I should leave room for defining several encodings or versions thereof to guarantee backwards compatibility with files already created, and I didn't want to let it go to waste.
 
-I also added a header that includes the date when the file was created. (There lies the dependency to `Unix`)
+I also added a header that includes the date when the file was created. (There lies the dependency to `Unix`, it should be considered more of a gimmick to have fun with the standard library)
 
 #### 2.e. Edit replay or loaded file
 [^Up](#fling)
